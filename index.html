@@ -1234,6 +1234,9 @@ function buildCredits(audio) {
         const link = audio.editorLink;
         parts.push('🎛 ' + (link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${name}</a>` : name));
     }
+    if (audio.collabPartners) {
+        parts.push('🎙️ w/ ' + esc(audio.collabPartners));
+    }
     if (!parts.length) return '';
     return `<div class="card-credits">${parts.join(' <span style="opacity:0.3">·</span> ')}</div>`;
 }
@@ -1296,14 +1299,17 @@ function createCard(audio, idx) {
             : `<div class="card-writer">Written by: ${writerName}</div>`;
     }
 
+    const exclusiveBadge = audio.exclusive ? `<span class="badge-exclusive">✦ Patreon</span>` : '';
+
     return `
         <article class="audio-card" style="animation-delay:${Math.min(idx, 15) * 0.04}s">
             <button class="fav-btn ${fav?'active':''}" data-id="${audio.id}" onclick="event.stopPropagation();toggleFav('${audio.id}')">♥</button>
             <div class="card-body">
-                ${typeBadge}
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${typeBadge}${exclusiveBadge}</div>
                 <h3 class="card-title">${esc(audio.title)}</h3>
                 ${metaHTML}
                 ${writerHTML}
+                ${buildCredits(audio)}
                 ${buildSynopsis(audio.description || audio.synopsis)}
                 ${buildTags(audio.tags)}
                 ${buildLinks(audio)}
@@ -1329,7 +1335,7 @@ function applyFilters() {
             const hay = [
                 a.title, a.description, a.synopsis,
                 ...(a.tags || []),
-                a.series, a.writer, a.editor, a.type, a.category
+                a.series, a.writer, a.editor, a.type, a.category, a.collabPartners
             ].filter(Boolean).join(' ').toLowerCase();
             return hay.includes(searchQuery);
         });
@@ -1403,89 +1409,10 @@ window.addEventListener('scroll', () => {
 ═══════════════════════════════════════════════════════ */
 async function init() {
     try {
-        /* ── INLINE TEST DATA (remove when using real audios.json) ── */
-        const json = [
-            {
-                id: "lurky-001",
-                title: "Slap Me! Skull-Fuck Me, Darling!",
-                type: "Rough",
-                description: "I'm your wife and your proud fucktoy slave-bitch. You've had a long day and I know exactly what you need. Let me get on my knees and remind you who owns me.",
-                date: "2025-12-02",
-                duration: 28,
-                tags: ["Rough", "Married", "Submissive", "Deepthroat", "Slapping", "Degradation", "British Accent", "5D Audio"],
-                exclusive: false,
-                writer: "LC-1987",
-                writerLink: "https://reddit.com/u/LC-1987",
-                links: { reddit: "https://reddit.com/r/example", subscribestar: "https://subscribestar.adult/lurky-audio" }
-            },
-            {
-                id: "lurky-002",
-                title: "Come Back to Bed — Lazy Sunday Morning",
-                type: "GFE",
-                description: "It's early. The light is soft through the curtains. You're trying to get up but I pull you back under the covers. Gentle whispers, skin on skin, nowhere to be today. Just us.",
-                date: "2025-11-28",
-                duration: 35,
-                series: "Weekend Mornings",
-                tags: ["GFE", "Gentle", "Cuddling", "Kissing", "Whispers", "Lazy Morning", "Vanilla", "L-Bombs"],
-                exclusive: true,
-                writer: "InkAndWhisper",
-                writerLink: "https://reddit.com/u/InkAndWhisper",
-                editor: "SoundVelvet",
-                editorLink: "https://reddit.com/u/SoundVelvet",
-                links: { patreon: "https://patreon.com/LurkyAudio", subscribestar: "https://subscribestar.adult/lurky-audio" }
-            },
-            {
-                id: "lurky-003",
-                title: "Your Boss Calls You Into Her Office After Hours",
-                type: "Fdom",
-                description: "Everyone else has gone home. The building is quiet. I've been watching you all week and tonight you're going to earn that promotion the old-fashioned way. Close the door. Lock it.",
-                date: "2025-11-20",
-                duration: 41,
-                tags: ["Fdom", "Boss/Employee", "Office", "Power Play", "Teasing", "Edging", "Stockings", "British Accent"],
-                exclusive: false,
-                links: { reddit: "https://reddit.com/r/example", script: "https://scriptbin.works/example" }
-            },
-            {
-                id: "lurky-004",
-                title: "I Broke In to Leave You a Present",
-                type: "Yandere",
-                description: "You come home to find the door unlocked. Something smells like perfume. There's a note on your pillow in handwriting you don't recognise. Then you hear breathing from the wardrobe.",
-                date: "2025-11-10",
-                duration: 22,
-                tags: ["Yandere", "Stalker", "Obsessive", "Creepy", "Whispering", "ASMR", "Thriller", "Knife Play"],
-                exclusive: true,
-                writer: "DarkPetals",
-                writerLink: "https://reddit.com/u/DarkPetals",
-                links: { subscribestar: "https://subscribestar.adult/lurky-audio" }
-            },
-            {
-                id: "lurky-005",
-                title: "Ramble — Let Me Tell You About My Filthiest Fantasy",
-                type: "Ramble",
-                description: "No script. No plan. Just me lying in bed with the mic, telling you something I've never told anyone. It starts innocent enough but it gets very, very dirty. You've been warned.",
-                date: "2025-10-30",
-                duration: 18,
-                tags: ["Ramble", "Unscripted", "Dirty Talk", "Fantasy", "Intimate", "Confession", "Raw Audio"],
-                exclusive: true,
-                links: { subscribestar: "https://subscribestar.adult/lurky-audio" }
-            },
-            {
-                id: "lurky-006",
-                title: "The Vampire Needs to Feed — And You Volunteered",
-                type: "Fantasy",
-                description: "The old manor is cold but my hands are colder. You answered the ad. You signed the waiver. Now sit still while I taste you. This might hurt a little. Or a lot. Depends how good you are.",
-                date: "2025-10-15",
-                duration: 47,
-                tags: ["Fantasy", "Vampire", "Gothic", "Biting", "Blood Play", "Seduction", "Period Setting", "5D Audio", "SFX"],
-                exclusive: false,
-                writer: "QuillOfShadows",
-                writerLink: "https://reddit.com/u/QuillOfShadows",
-                editor: "SoundVelvet",
-                editorLink: "https://reddit.com/u/SoundVelvet",
-                links: { reddit: "https://reddit.com/r/example", patreon: "https://patreon.com/LurkyAudio", subscribestar: "https://subscribestar.adult/lurky-audio", script: "https://scriptbin.works/example" }
-            }
-        ];
-        /* ── END TEST DATA ── */
+        /* ── FETCH FROM audios.json ── */
+        const resp = await fetch('audios.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
 
         allAudios = Array.isArray(json) ? json : (json.audios || []);
 
