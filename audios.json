@@ -1,6 +1,6 @@
 {
-  "lastUpdated": "2026-03-16T22:12:36Z",
-  "totalEntries": 1127,
+  "lastUpdated": "2026-03-16T23:20:34Z",
+  "totalEntries": 1126,
   "categories": [
     "ASMR",
     "Beast",
@@ -17,8 +17,7 @@
     "Sadism",
     "Sci-fi",
     "Script Offer",
-    "Yandere",
-    "test"
+    "Yandere"
   ],
   "audios": [
     {
@@ -36572,7 +36571,8 @@
       "exclusive": false,
       "platform": "reddit",
       "links": {
-        "reddit": "https://reddit.com/r/u_Lurkydip/comments/s9zozs/email_text/"
+        "reddit": "https://reddit.com/r/u_Lurkydip/comments/s9zozs/email_text/",
+        "scriptLocal": "email.md"
       }
     },
     {
@@ -36680,26 +36680,6 @@
       "duration": "23:24",
       "links": {
         "reddit": "https://www.reddit.com/r/gonewildaudio/comments/1hfyrbw/fffffffff4m_oath_of_conquest_script_fill_9_audios/"
-      }
-    },
-    {
-      "id": "test-r1002",
-      "title": "test",
-      "categories": [
-        "test"
-      ],
-      "description": "testtesttesttesttesttest",
-      "date": "",
-      "tags": [
-        "testtesttesttesttesttesttest"
-      ],
-      "exclusive": false,
-      "platform": "reddit",
-      "writer": "test",
-      "writerLink": "https://reddit.com/u/test",
-      "links": {
-        "reddit": "testtesttesttesttesttest",
-        "script": "test"
       }
     }
   ]
