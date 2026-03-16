@@ -1259,11 +1259,6 @@ function buildCredits(audio) {
     if (audio.largeCollab) return `<div class="large-collab-notice">🎙️ Large collaboration — see post for full credits</div>`;
 
     const parts = [];
-    if (audio.writer) {
-        const name = esc(audio.writer);
-        const link = audio.writerLink;
-        parts.push('✍ ' + (link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${name}</a>` : name));
-    }
     if (audio.editor) {
         const name = esc(audio.editor);
         const link = audio.editorLink;
@@ -1338,19 +1333,18 @@ function createCard(audio, idx) {
     let writerHTML = '';
     if (audio.writer) {
         const writerName = esc(audio.writer);
-        writerHTML = audio.writerLink
-            ? `<div class="card-writer">Written by: <a href="${esc(audio.writerLink)}" target="_blank" rel="noopener">${writerName}</a></div>`
+        /* Auto-link to reddit profile if no explicit link provided */
+        const writerLink = audio.writerLink || ((/^[\w_-]+$/.test(audio.writer) && audio.writer.length > 1) ? `https://reddit.com/u/${encodeURIComponent(audio.writer)}` : '');
+        writerHTML = writerLink
+            ? `<div class="card-writer">Written by: <a href="${esc(writerLink)}" target="_blank" rel="noopener">${writerName}</a></div>`
             : `<div class="card-writer">Written by: ${writerName}</div>`;
     }
-
-    const platformLabel = audio.platform === 'subscribestar' ? 'SubscribeStar' : audio.platform === 'patreon' ? 'Patreon' : '';
-    const exclusiveBadge = audio.exclusive ? `<span class="badge-exclusive">✦ ${platformLabel || 'Exclusive'}</span>` : '';
 
     return `
         <article class="audio-card" style="animation-delay:${Math.min(idx, 15) * 0.04}s">
             <button class="fav-btn ${fav?'active':''}" data-id="${audio.id}" onclick="event.stopPropagation();toggleFav('${audio.id}')">♥</button>
             <div class="card-body">
-                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${badgesHTML}${exclusiveBadge}</div>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${badgesHTML}</div>
                 <h3 class="card-title">${esc(audio.title)}</h3>
                 ${metaHTML}
                 ${writerHTML}
