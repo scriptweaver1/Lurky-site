@@ -406,18 +406,17 @@
     .audio-grid.view-3 .card-synopsis { -webkit-line-clamp: 2; font-size: 0.8rem; }
     .audio-grid.view-3 .tag { font-size: 0.65rem; padding: 0.2rem 0.5rem; }
 
-    /* Icon-only buttons when card is narrow (3-col) */
+    /* Stacked buttons in narrow 3-col cards */
     .audio-grid.view-3 .card-footer { 
-        display: flex; flex-wrap: wrap; gap: 0.4rem;
+        display: flex; flex-direction: column; gap: 0.3rem;
     }
-    .audio-grid.view-3 .card-link-btn .btn-label { display: none; }
     .audio-grid.view-3 .card-link-btn { 
-        flex: 1 1 40px; width: auto;
-        padding: 0.6rem; justify-content: center; 
-        min-height: 38px; min-width: 40px;
-        font-size: 0.75rem;
+        width: 100%;
+        padding: 0.45rem 0.8rem; justify-content: center; 
+        min-height: 32px;
+        font-size: 0.72rem;
     }
-    .audio-grid.view-3 .card-link-btn svg { width: 18px; height: 18px; }
+    .audio-grid.view-3 .card-link-btn svg { width: 14px; height: 14px; }
 
     /* ═══════════════════════════════════════════
        AUDIO CARD
