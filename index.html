@@ -408,9 +408,9 @@
     .audio-grid.view-3 .card-link-btn { font-size: 0.75rem; padding: 0.4rem 0.8rem; }
 
     /* Icon-only buttons when card is narrow (3-col) */
-    .audio-grid.view-3 .card-footer { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+    .audio-grid.view-3 .card-footer { grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); }
     .audio-grid.view-3 .card-link-btn .btn-label { display: none; }
-    .audio-grid.view-3 .card-link-btn { padding: 0.5rem; justify-content: center; }
+    .audio-grid.view-3 .card-link-btn { padding: 0.6rem; justify-content: center; min-height: 38px; }
     .audio-grid.view-3 .card-link-btn svg { width: 18px; height: 18px; }
 
     /* ═══════════════════════════════════════════
@@ -545,10 +545,9 @@
     }
 
     /* Card footer with link buttons */
-    .card-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; padding-top: 0.5rem; margin-top: auto; }
+    .card-footer { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem; padding-top: 0.5rem; margin-top: auto; }
     .card-footer .card-link-btn:only-child,
     .card-footer .badge-coming-soon:only-child { grid-column: 1 / -1; }
-    .card-footer .card-link-btn:nth-child(odd):last-child { grid-column: 1 / -1; }
     .card-link-btn {
         display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
         padding: 0.45rem 0.9rem; border-radius: 0;
