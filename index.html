@@ -884,25 +884,53 @@
 ═══════════════════════════════════════════════════════ */
 const DATA_URL = './audios.json';
 
-/* Type config: key → { label, emoji, color, bg, border } */
-const TYPE_CONFIG = {
-    all:            { label:'All Audios',   emoji:'✨' },
-    gfe:            { label:'GFE',          emoji:'💛', color:'#e8c96a', bg:'rgba(232,201,106,0.1)',  bd:'rgba(232,201,106,0.2)' },
-    bfe:            { label:'BFE',          emoji:'💙', color:'#6ab4e8', bg:'rgba(106,180,232,0.1)',  bd:'rgba(106,180,232,0.2)' },
-    msub:           { label:'MSub',         emoji:'🔗', color:'#a88bd4', bg:'rgba(168,139,212,0.1)',  bd:'rgba(168,139,212,0.2)' },
-    fdom:           { label:'FDom',         emoji:'👑', color:'#d4a04a', bg:'rgba(212,160,74,0.1)',   bd:'rgba(212,160,74,0.2)' },
-    ramble:         { label:'Ramble',       emoji:'🎧', color:'#7bc48a', bg:'rgba(123,196,138,0.1)',  bd:'rgba(123,196,138,0.2)' },
-    asmr:           { label:'ASMR',         emoji:'🌙', color:'#b4a0d4', bg:'rgba(180,160,212,0.1)',  bd:'rgba(180,160,212,0.2)' },
-    comfort:        { label:'Comfort',      emoji:'🌸', color:'#d4a0b4', bg:'rgba(212,160,180,0.1)',  bd:'rgba(212,160,180,0.2)' },
-    spicy:          { label:'Spicy',        emoji:'🔥', color:'#e07a5f', bg:'rgba(224,122,95,0.1)',   bd:'rgba(224,122,95,0.2)' },
-    collab:         { label:'Collab',       emoji:'🎙️', color:'#8bc4c4', bg:'rgba(139,196,196,0.1)',  bd:'rgba(139,196,196,0.2)' },
-    sfw:            { label:'SFW',          emoji:'☀️', color:'#c4c48b', bg:'rgba(196,196,139,0.1)',  bd:'rgba(196,196,139,0.2)' },
-    roleplay:       { label:'Roleplay',     emoji:'🎭', color:'#c4a08b', bg:'rgba(196,160,139,0.1)',  bd:'rgba(196,160,139,0.2)' },
-    rough:          { label:'Rough',        emoji:'💥', color:'#ff4466', bg:'rgba(255,68,102,0.1)',   bd:'rgba(255,68,102,0.2)' },
-    yandere:        { label:'Yandere',      emoji:'🔪', color:'#ff66aa', bg:'rgba(255,102,170,0.1)',  bd:'rgba(255,102,170,0.2)' },
-    fantasy:        { label:'Fantasy',      emoji:'🧛', color:'#aa66ff', bg:'rgba(170,102,255,0.1)',  bd:'rgba(170,102,255,0.2)' },
+/*
+   DYNAMIC CATEGORY SYSTEM
+   Categories are read from the JSON — edit the spreadsheet to add/remove.
+   Known categories get themed colors; new ones auto-generate.
+*/
+const CATEGORY_STYLE = {
+    'ASMR':         { emoji:'🌙', color:'#b4a0d4' },
+    'Beast':        { emoji:'🐾', color:'#8b6b4a' },
+    'Collab':       { emoji:'🎙️', color:'#8bc4c4' },
+    'Comedy':       { emoji:'😂', color:'#e8c96a' },
+    'Cucking':      { emoji:'💔', color:'#e07a5f' },
+    'Dark ASMR':    { emoji:'🖤', color:'#8866aa' },
+    'Day-to-Day':   { emoji:'☕', color:'#c4a08b' },
+    'Fantasy':      { emoji:'🧛', color:'#aa66ff' },
+    'Fdom':         { emoji:'👑', color:'#d4a04a' },
+    'Fsub':         { emoji:'🔗', color:'#a88bd4' },
+    'Incest':       { emoji:'🚫', color:'#cc6688' },
+    'Interview':    { emoji:'🎧', color:'#7bc48a' },
+    'Mommy':        { emoji:'🌸', color:'#d4a0b4' },
+    'SFW':          { emoji:'☀️', color:'#c4c48b' },
+    'Sadism':       { emoji:'💥', color:'#ff4466' },
+    'Sci-fi':       { emoji:'🚀', color:'#6ab4e8' },
+    'Script Offer': { emoji:'📝', color:'#88aacc' },
+    'Taboo':        { emoji:'⛓️', color:'#cc4455' },
+    'Yandere':      { emoji:'🔪', color:'#ff66aa' },
 };
-const DEFAULT_TYPE = { label:'Other', emoji:'🎵', color:'var(--warm-gold)', bg:'rgba(160,0,200,0.06)', bd:'rgba(160,0,200,0.13)' };
+const DEFAULT_CAT_STYLE = { emoji:'🎵', color:'#ff00ff' };
+
+/* Auto-generate a color for unknown categories based on name hash */
+function hashColor(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+    const hue = Math.abs(h) % 360;
+    return `hsl(${hue}, 55%, 65%)`;
+}
+
+function getCatStyle(name) {
+    if (CATEGORY_STYLE[name]) return CATEGORY_STYLE[name];
+    return { emoji: DEFAULT_CAT_STYLE.emoji, color: hashColor(name) };
+}
+
+function getCatBg(color) { return color.startsWith('hsl') ? color.replace('65%)', '10%)') : color + '1a'; }
+function getCatBd(color) { return color.startsWith('hsl') ? color.replace('65%)', '20%)') : color + '33'; }
+
+/* Built dynamically from JSON — populated in init() */
+let ALL_CATEGORIES = [];
+const ALL_LABEL  = { label:'All Audios', emoji:'✨' };
 
 /* ═══════════════════════════════════════════════════════
    SAFE STORAGE — fallback to in-memory when blocked
@@ -1102,23 +1130,35 @@ window.addEventListener('scroll', () => {
 function buildFilters() {
     const list = document.getElementById('filterList');
     list.innerHTML = '';
-    const types = ['all', ...Object.keys(TYPE_CONFIG).filter(k => k !== 'all')];
 
-    types.forEach(type => {
-        const cfg = TYPE_CONFIG[type] || DEFAULT_TYPE;
-        const count = type === 'all'
-            ? allAudios.length
-            : allAudios.filter(a => resolveType(a) === type).length;
-        if (type !== 'all' && count === 0) return;
+    /* "All" always first */
+    const allLi = document.createElement('li');
+    allLi.className = 'filter-item' + (currentFilter === 'all' ? ' active' : '');
+    allLi.dataset.type = 'all';
+    allLi.innerHTML = `<span><span class="emoji">${ALL_LABEL.emoji}</span>${ALL_LABEL.label}</span><span class="filter-count">${allAudios.length}</span>`;
+    allLi.addEventListener('click', () => {
+        currentFilter = 'all';
+        document.querySelectorAll('.filter-item').forEach(i => i.classList.toggle('active', i.dataset.type === 'all'));
+        document.getElementById('sectionTitle').textContent = ALL_LABEL.label;
+        applyFilters();
+        if (window.innerWidth <= 900) toggleMobileNav();
+    });
+    list.appendChild(allLi);
 
+    /* Dynamic categories from JSON */
+    ALL_CATEGORIES.forEach(cat => {
+        const count = allAudios.filter(a => (a.categories || []).includes(cat)).length;
+        if (count === 0) return;
+
+        const style = getCatStyle(cat);
         const li = document.createElement('li');
-        li.className = 'filter-item' + (type === currentFilter ? ' active' : '');
-        li.dataset.type = type;
-        li.innerHTML = `<span><span class="emoji">${cfg.emoji || ''}</span>${cfg.label}</span><span class="filter-count">${count}</span>`;
+        li.className = 'filter-item' + (currentFilter === cat ? ' active' : '');
+        li.dataset.type = cat;
+        li.innerHTML = `<span><span class="emoji">${style.emoji}</span>${cat}</span><span class="filter-count">${count}</span>`;
         li.addEventListener('click', () => {
-            currentFilter = type;
-            document.querySelectorAll('.filter-item').forEach(i => i.classList.toggle('active', i.dataset.type === type));
-            document.getElementById('sectionTitle').textContent = cfg.label;
+            currentFilter = cat;
+            document.querySelectorAll('.filter-item').forEach(i => i.classList.toggle('active', i.dataset.type === cat));
+            document.getElementById('sectionTitle').textContent = cat;
             applyFilters();
             if (window.innerWidth <= 900) toggleMobileNav();
         });
@@ -1126,14 +1166,9 @@ function buildFilters() {
     });
 }
 
-function resolveType(audio) {
-    const t = (audio.type || audio.category || '').toLowerCase().trim();
-    if (TYPE_CONFIG[t]) return t;
-    /* fuzzy match */
-    for (const key of Object.keys(TYPE_CONFIG)) {
-        if (t.includes(key) || key.includes(t)) return key;
-    }
-    return t || 'other';
+/* Check if an audio belongs to a category */
+function audioHasCategory(audio, cat) {
+    return (audio.categories || []).includes(cat);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1278,19 +1313,28 @@ function buildLinks(audio) {
 }
 
 function createCard(audio, idx) {
-    const type = resolveType(audio);
-    const cfg = TYPE_CONFIG[type] || DEFAULT_TYPE;
+    const cats = audio.categories || [];
     const fav = isFav(audio.id);
 
-    const typeBadge = `<span class="card-type" style="background:${cfg.bg};border:1px solid ${cfg.bd};color:${cfg.color}">${cfg.emoji} ${cfg.label}</span>`;
+    /* Build category badges — one per category */
+    let badgesHTML = '';
+    if (cats.length) {
+        cats.forEach(cat => {
+            const s = getCatStyle(cat);
+            const bg = getCatBg(s.color);
+            const bd = getCatBd(s.color);
+            badgesHTML += `<span class="card-type" style="background:${bg};border:1px solid ${bd};color:${s.color}">${s.emoji} ${cat}</span>`;
+        });
+    } else {
+        const s = DEFAULT_CAT_STYLE;
+        badgesHTML = `<span class="card-type" style="background:rgba(160,0,200,0.06);border:1px solid rgba(160,0,200,0.13);color:${s.color}">${s.emoji} Uncategorized</span>`;
+    }
 
     const meta = [];
     if (audio.date) meta.push(formatDate(audio.date));
     if (audio.duration) meta.push(audio.duration + ' min');
-    if (audio.series) {} // series not displayed on cards
     const metaHTML = meta.length ? `<div class="card-meta">${meta.join(' <span class="sep">·</span> ')}</div>` : '';
 
-    /* Writer credit — shown separately so it's visible in condensed mode */
     let writerHTML = '';
     if (audio.writer) {
         const writerName = esc(audio.writer);
@@ -1299,13 +1343,14 @@ function createCard(audio, idx) {
             : `<div class="card-writer">Written by: ${writerName}</div>`;
     }
 
-    const exclusiveBadge = audio.exclusive ? `<span class="badge-exclusive">✦ Patreon</span>` : '';
+    const platformLabel = audio.platform === 'subscribestar' ? 'SubscribeStar' : audio.platform === 'patreon' ? 'Patreon' : '';
+    const exclusiveBadge = audio.exclusive ? `<span class="badge-exclusive">✦ ${platformLabel || 'Exclusive'}</span>` : '';
 
     return `
         <article class="audio-card" style="animation-delay:${Math.min(idx, 15) * 0.04}s">
             <button class="fav-btn ${fav?'active':''}" data-id="${audio.id}" onclick="event.stopPropagation();toggleFav('${audio.id}')">♥</button>
             <div class="card-body">
-                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${typeBadge}${exclusiveBadge}</div>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${badgesHTML}${exclusiveBadge}</div>
                 <h3 class="card-title">${esc(audio.title)}</h3>
                 ${metaHTML}
                 ${writerHTML}
@@ -1324,9 +1369,9 @@ function createCard(audio, idx) {
 function applyFilters() {
     let items = [...allAudios];
 
-    /* Type filter */
+    /* Category filter — checks if audio has the selected category */
     if (currentFilter !== 'all') {
-        items = items.filter(a => resolveType(a) === currentFilter);
+        items = items.filter(a => audioHasCategory(a, currentFilter));
     }
 
     /* Search */
@@ -1335,7 +1380,8 @@ function applyFilters() {
             const hay = [
                 a.title, a.description, a.synopsis,
                 ...(a.tags || []),
-                a.series, a.writer, a.editor, a.type, a.category, a.collabPartners
+                ...(a.categories || []),
+                a.series, a.writer, a.editor, a.collabPartners, a.platform
             ].filter(Boolean).join(' ').toLowerCase();
             return hay.includes(searchQuery);
         });
@@ -1416,8 +1462,14 @@ async function init() {
 
         allAudios = Array.isArray(json) ? json : (json.audios || []);
 
-        /* Ensure every entry has an id */
-        allAudios.forEach((a, i) => { if (!a.id) a.id = 'a' + i; });
+        /* Read dynamic categories from JSON */
+        ALL_CATEGORIES = json.categories || [];
+
+        /* Ensure every entry has an id and categories array */
+        allAudios.forEach((a, i) => {
+            if (!a.id) a.id = 'a' + i;
+            if (!a.categories) a.categories = [];
+        });
 
         document.getElementById('loadingState')?.remove();
         buildFilters();
