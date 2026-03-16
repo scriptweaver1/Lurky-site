@@ -23,9 +23,9 @@ from datetime import datetime
 # Use the format:
 #   https://docs.google.com/spreadsheets/d/e/XXXXX/pub?gid=0&single=true&output=csv
 
-REDDIT_CSV_URL   = os.environ.get("REDDIT_CSV_URL",   "YOUR_REDDIT_SHEET_CSV_URL_HERE")
-PATREON_CSV_URL  = os.environ.get("PATREON_CSV_URL",  "YOUR_PATREON_SHEET_CSV_URL_HERE")
-SUBSTAR_CSV_URL  = os.environ.get("SUBSTAR_CSV_URL",  "YOUR_SUBSTAR_SHEET_CSV_URL_HERE")
+REDDIT_CSV_URL   = os.environ.get("REDDIT_CSV_URL",   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTwzTGuoEEVeDQJxHzj7FD9yR95u3YH0kXNd3zN8dU_prcu24Wok7F2t6HWeuNT8Q_qxfj7PpZLBnTk/pub?output=csv")
+PATREON_CSV_URL  = os.environ.get("PATREON_CSV_URL",  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGzokFkt7XDy9OJEqAro2RjagSLpikBwWqAk8XofgYtuhXsDz7jk0A5UGFQt4089AGB9FL7mtqbh32/pubhtml")
+SUBSTAR_CSV_URL  = os.environ.get("SUBSTAR_CSV_URL",  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRD9m1pVAHRJ1gZeYDXqQddFHEqEDfesL1SmPPh4UmNimlO4W2nqpiqYpI0H9MpM_quDKdq_0Z-xF8E/pub?output=csv")
 
 OUTPUT_FILE = "audios.json"
 
