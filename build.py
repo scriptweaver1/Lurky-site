@@ -243,10 +243,11 @@ def process_reddit(rows):
         if script_link:
             entry["links"]["script"] = script_link
 
-        # Mark large collabs (4+ partners)
+        # Mark large collabs (4+ partners OR "Big Collab" text)
         partners = entry["collabPartners"]
-        if partners and partners.count(",") >= 3:
+        if partners and (partners.count(",") >= 3 or "big collab" in partners.lower()):
             entry["largeCollab"] = True
+            entry["collabPartners"] = ""
 
         entries.append(entry)
 
@@ -289,8 +290,9 @@ def process_patreon(rows):
         if script_link:
             entry["links"]["script"] = script_link
 
-        if entry["collabPartners"] and entry["collabPartners"].count(",") >= 3:
+        if entry["collabPartners"] and (entry["collabPartners"].count(",") >= 3 or "big collab" in entry["collabPartners"].lower()):
             entry["largeCollab"] = True
+            entry["collabPartners"] = ""
 
         entries.append(entry)
 
@@ -332,8 +334,9 @@ def process_substar(rows):
         if script_link:
             entry["links"]["script"] = script_link
 
-        if entry["collabPartners"] and entry["collabPartners"].count(",") >= 3:
+        if entry["collabPartners"] and (entry["collabPartners"].count(",") >= 3 or "big collab" in entry["collabPartners"].lower()):
             entry["largeCollab"] = True
+            entry["collabPartners"] = ""
 
         entries.append(entry)
 
