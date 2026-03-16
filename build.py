@@ -206,6 +206,25 @@ def build_writer_link(writer):
     return ""
 
 
+def is_local_script(link):
+    """Check if a script link is a local .md filename (not a URL)."""
+    if not link:
+        return False
+    return not link.startswith("http") and link.endswith(".md")
+
+
+def process_script_link(entry, script_link):
+    """Route script links: local .md files go to reader, URLs stay external."""
+    if not script_link:
+        return
+    if is_local_script(script_link):
+        # Local markdown file → reader page
+        entry["links"]["scriptLocal"] = script_link
+    else:
+        # External URL → direct link
+        entry["links"]["script"] = script_link
+
+
 # ─── Process each source ─────────────────────────────────────────────
 
 def process_reddit(rows):
@@ -240,8 +259,7 @@ def process_reddit(rows):
         script_link = (r.get("Script Link") or "").strip()
         if post_link:
             entry["links"]["reddit"] = post_link
-        if script_link:
-            entry["links"]["script"] = script_link
+        process_script_link(entry, script_link)
 
         # Mark large collabs (4+ partners OR "Big Collab" text)
         partners = entry["collabPartners"]
@@ -287,8 +305,7 @@ def process_patreon(rows):
         script_link = (r.get("Script Link") or "").strip()
         if post_link:
             entry["links"]["patreon"] = post_link
-        if script_link:
-            entry["links"]["script"] = script_link
+        process_script_link(entry, script_link)
 
         if entry["collabPartners"] and (entry["collabPartners"].count(",") >= 3 or "big collab" in entry["collabPartners"].lower()):
             entry["largeCollab"] = True
@@ -331,8 +348,7 @@ def process_substar(rows):
         script_link = (r.get("Script Link") or "").strip()
         if post_link:
             entry["links"]["subscribestar"] = post_link
-        if script_link:
-            entry["links"]["script"] = script_link
+        process_script_link(entry, script_link)
 
         if entry["collabPartners"] and (entry["collabPartners"].count(",") >= 3 or "big collab" in entry["collabPartners"].lower()):
             entry["largeCollab"] = True
