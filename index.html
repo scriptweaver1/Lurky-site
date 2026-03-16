@@ -834,7 +834,7 @@
                 <span class="search-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 </span>
-                <input type="text" class="search-input" id="searchInput" placeholder="Search titles, tags, description..." autocomplete="off">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search titles, tags, writers… (smart matching enabled)" autocomplete="off">
                 <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
             </div>
 
@@ -1051,6 +1051,157 @@ applyA11y();
 /* ═══════════════════════════════════════════════════════
    SEARCH
 ═══════════════════════════════════════════════════════ */
+
+/* ── Smart Search: normalization + related concepts ── */
+
+/**
+ * Normalize a search term: lowercase, strip hyphens/spaces/underscores.
+ * "Deep-Throat" → "deepthroat", "face fucking" → "facefucking"
+ */
+function normalizeTerm(t) {
+    return t.toLowerCase().replace(/[\s\-_]+/g, '');
+}
+
+/**
+ * Related concept groups. Each array = a cluster of terms that should
+ * cross-match. When you search for any term in a group, audios tagged
+ * with ANY other term in that group also appear as "related."
+ *
+ * Add/edit groups as needed — order doesn't matter.
+ */
+const RELATED_GROUPS = [
+    /* Oral */
+    ['blowjob', 'oral', 'bj', 'fellatio', 'cock sucking', 'cocksucking', 'gluck', 'sloppy head'],
+    ['deepthroat', 'deep throat', 'throatfuck', 'throat fuck', 'skull fuck', 'skullfuck', 'facefuck', 'face fuck', 'facefucking', 'face fucking', 'gagging', 'glucking', 'held down on cock'],
+    ['throatpie', 'throat pie', 'cum in throat', 'swallow'],
+
+    /* Anal */
+    ['anal', 'ass fuck', 'ass fucking', 'butt fuck', 'anal creampie', 'painal', 'anal play'],
+    ['rimming', 'ass worship', 'ass eating', 'analingus', 'tongue fucking ass'],
+    ['pegging', 'strap-on', 'strapon', 'strap on'],
+    ['buttplug', 'butt plug', 'anal plug'],
+
+    /* Dom/Sub dynamics */
+    ['fdom', 'femdom', 'gentle fdom', 'fdom speaker'],
+    ['fsub', 'femsub', 'fsub speaker'],
+    ['mdom', 'male dom'],
+    ['msub', 'male sub'],
+    ['mommy', 'mommydom', 'mommy dom', 'mommy domme', 'mummy', 'mdlb'],
+    ['daddy', 'ddlg', 'ddlb'],
+    ['pet play', 'petplay', 'puppy', 'puppy play', 'kitten', 'good boy', 'good girl', 'collar', 'leash'],
+
+    /* Rough / dark */
+    ['rape', 'noncon', 'non-con', 'cnc', 'dubcon', 'dub con', 'forced'],
+    ['degradation', 'humiliation', 'name calling', 'insults', 'verbal abuse'],
+    ['choking', 'breathplay', 'breath play', 'strangling'],
+    ['slapping', 'spanking', 'hitting', 'beating', 'punishment'],
+    ['bondage', 'restrained', 'tied up', 'handcuffs', 'rope'],
+    ['knife play', 'knifeplay', 'blood', 'bloodplay', 'blood play', 'cutting'],
+
+    /* Wholesome / emotional */
+    ['comfort', 'aftercare', 'reassurance', 'wholesome', 'cuddles', 'cuddling'],
+    ['l-bombs', 'l bomb', 'i love you', 'romantic', 'love'],
+    ['sfw', 'safe for work', 'sleep aid', 'comfort'],
+    ['praise', 'encouragement', 'body praise', 'male body praise'],
+    ['crying', 'tears', 'dacryphilia', 'sobbing', 'emotional'],
+
+    /* Kinks */
+    ['breeding', 'impregnation', 'impreg', 'creampie', 'breed me'],
+    ['cuckold', 'cuckolding', 'cucking', 'cheating', 'hotwife', 'bull'],
+    ['chastity', 'denial', 'edging', 'orgasm denial', 'tease and denial', 'ruined orgasm', 'locked'],
+    ['hypnosis', 'hypno', 'mind control', 'brainwash', 'mindbreak', 'mind break'],
+    ['yandere', 'obsessive', 'possessive', 'stalker', 'kidnapping'],
+    ['free use', 'freeuse', 'free-use', 'objectification'],
+    ['size', 'big cock', 'huge cock', 'size queen', 'sph', 'small penis', 'size difference', 'size mentions'],
+    ['lactation', 'breastfeeding', 'nursing', 'milk', 'hucow'],
+    ['watersports', 'piss', 'pee', 'golden shower'],
+    ['feet', 'foot', 'foot job', 'footjob', 'foot worship', 'toes'],
+
+    /* Body / intercourse */
+    ['handjob', 'hand job', 'stroking', 'jerking'],
+    ['titfuck', 'tit fuck', 'titjob', 'tit job', 'boobjob', 'boob job', 'paizuri'],
+    ['cowgirl', 'riding', 'reverse cowgirl'],
+    ['doggy', 'doggy style', 'doggystyle', 'from behind'],
+    ['missionary', 'mating press', 'prone bone', 'pronebone'],
+    ['fingering', 'finger fucking', 'fingerfucking'],
+    ['cunnilingus', 'pussy eating', 'pussy licking', 'going down on'],
+    ['squirting', 'squirt', 'gushing'],
+
+    /* Fantasy */
+    ['succubus', 'demon', 'demon girl', 'incubus'],
+    ['vampire', 'blood sucking', 'bite', 'fangs'],
+    ['monster girl', 'monstergirl', 'orc', 'elf', 'neko', 'catgirl', 'cat girl', 'werewolf', 'lamia', 'arachne', 'spider girl'],
+    ['magic', 'witch', 'spell', 'potion', 'enchantment'],
+
+    /* Format / meta */
+    ['asmr', 'whispers', 'whispering', 'close mic', 'binaural', 'ear licking', 'ear kissing', 'tingles'],
+    ['joi', 'jerk off instructions', 'jerk off instruction'],
+    ['hfo', 'hands free', 'hands free orgasm'],
+    ['3d', 'binaural', '5d', 'surround'],
+    ['comedy', 'humor', 'funny', 'shitpost', 'parody'],
+    ['narrative', 'story', 'radio play', 'audio drama'],
+    ['interview', 'podcast', 'writer interview', 'slow sunday smut'],
+    ['collab', 'collaboration', 'threesome', 'group', 'ffm', 'mmf'],
+];
+
+/* Pre-build lookup: normalized term → list of normalized related terms */
+const _relatedCache = {};
+(function buildRelatedCache() {
+    for (const group of RELATED_GROUPS) {
+        const normed = group.map(normalizeTerm);
+        for (const term of normed) {
+            if (!_relatedCache[term]) _relatedCache[term] = new Set();
+            for (const other of normed) {
+                if (other !== term) _relatedCache[term].add(other);
+            }
+        }
+    }
+})();
+
+/**
+ * Get all related normalized terms for a query.
+ * Returns Set of normalized terms that are related.
+ */
+function getRelatedTerms(query) {
+    const nq = normalizeTerm(query);
+    const related = new Set();
+
+    // Direct lookup
+    if (_relatedCache[nq]) {
+        for (const t of _relatedCache[nq]) related.add(t);
+    }
+
+    // Partial match: if query is a substring of a known term or vice versa
+    for (const key of Object.keys(_relatedCache)) {
+        if ((key.length > 3 && nq.includes(key)) || (nq.length > 3 && key.includes(nq))) {
+            related.add(key);
+            for (const t of _relatedCache[key]) related.add(t);
+        }
+    }
+
+    related.delete(nq); // Don't include the query itself
+    return related;
+}
+
+/**
+ * Build a normalized haystack string for an audio entry.
+ * Strips hyphens/spaces so "deep throat" matches "deepthroat" in tags.
+ */
+function buildHaystack(a) {
+    const raw = [
+        a.title, a.description, a.synopsis,
+        ...(a.tags || []),
+        ...(a.categories || []),
+        a.series, a.writer, a.editor, a.collabPartners, a.platform
+    ].filter(Boolean).join(' ').toLowerCase();
+    return raw;
+}
+
+function buildNormalizedHaystack(a) {
+    return normalizeTerm(buildHaystack(a));
+}
+
+/* ── Search UI ── */
 function toggleSearch() {
     const w = document.getElementById('searchWrap');
     w.classList.toggle('visible');
@@ -1072,6 +1223,16 @@ document.getElementById('searchInput').addEventListener('input', e => {
 document.getElementById('searchInput').addEventListener('keydown', e => {
     if (e.key === 'Escape') clearSearch();
 });
+
+/* ── Tag click → search ── */
+function searchByTag(tag) {
+    searchQuery = tag.toLowerCase();
+    document.getElementById('searchInput').value = tag;
+    document.getElementById('searchClear').classList.add('visible');
+    document.getElementById('searchWrap').classList.add('visible');
+    applyFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 /* ═══════════════════════════════════════════════════════
    MOBILE NAV
@@ -1230,10 +1391,10 @@ function buildTags(tags) {
     const visible = tags.slice(0, MAX_VISIBLE);
     const hidden = tags.slice(MAX_VISIBLE);
     let html = '<div class="card-tags">';
-    visible.forEach(t => { html += `<span class="tag">${esc(t)}</span>`; });
+    visible.forEach(t => { html += `<span class="tag" onclick="event.stopPropagation();searchByTag('${esc(t)}')">${esc(t)}</span>`; });
     if (hidden.length) {
         html += `<button class="tags-toggle" onclick="event.stopPropagation();toggleTags(this)">+${hidden.length} more</button>`;
-        hidden.forEach(t => { html += `<span class="tag" style="display:none">${esc(t)}</span>`; });
+        hidden.forEach(t => { html += `<span class="tag" style="display:none" onclick="event.stopPropagation();searchByTag('${esc(t)}')">${esc(t)}</span>`; });
     }
     html += '</div>';
     return html;
@@ -1256,7 +1417,7 @@ function toggleTags(btn) {
 }
 
 function buildCredits(audio) {
-    if (audio.largeCollab) return `<div class="large-collab-notice">🎙️ Large collaboration — see post for full credits</div>`;
+    if (audio.largeCollab) return `<div class="large-collab-notice">🎙️ This is a big collab, check the post to view all involved!</div>`;
 
     const parts = [];
     if (audio.editor) {
@@ -1265,7 +1426,16 @@ function buildCredits(audio) {
         parts.push('🎛 ' + (link ? `<a href="${esc(link)}" target="_blank" rel="noopener">${name}</a>` : name));
     }
     if (audio.collabPartners) {
-        parts.push('🎙️ w/ ' + esc(audio.collabPartners));
+        const linked = audio.collabPartners.split(',').map(name => {
+            name = name.trim();
+            if (!name) return '';
+            const safe = esc(name);
+            if (/^[\w_-]+$/.test(name) && name.length > 1) {
+                return `<a href="https://reddit.com/u/${encodeURIComponent(name)}" target="_blank" rel="noopener">${safe}</a>`;
+            }
+            return safe;
+        }).filter(Boolean).join(', ');
+        parts.push('🎙️ w/ ' + linked);
     }
     if (!parts.length) return '';
     return `<div class="card-credits">${parts.join(' <span style="opacity:0.3">·</span> ')}</div>`;
@@ -1368,17 +1538,42 @@ function applyFilters() {
         items = items.filter(a => audioHasCategory(a, currentFilter));
     }
 
-    /* Search */
+    /* Smart Search — exact + normalized + related */
     if (searchQuery) {
-        items = items.filter(a => {
-            const hay = [
-                a.title, a.description, a.synopsis,
-                ...(a.tags || []),
-                ...(a.categories || []),
-                a.series, a.writer, a.editor, a.collabPartners, a.platform
-            ].filter(Boolean).join(' ').toLowerCase();
-            return hay.includes(searchQuery);
+        const nq = normalizeTerm(searchQuery);
+        const relatedTerms = getRelatedTerms(searchQuery);
+
+        const exact = [];
+        const related = [];
+
+        items.forEach(a => {
+            const rawHay = buildHaystack(a);
+            const normHay = buildNormalizedHaystack(a);
+
+            // Exact/normalized match: query appears in raw or normalized haystack
+            if (rawHay.includes(searchQuery) || normHay.includes(nq)) {
+                exact.push(a);
+                return;
+            }
+
+            // Related match: any related term appears in normalized haystack
+            if (relatedTerms.size > 0) {
+                for (const rt of relatedTerms) {
+                    if (normHay.includes(rt)) {
+                        related.push(a);
+                        return;
+                    }
+                }
+            }
         });
+
+        items = exact;
+        /* Store related for rendering with divider */
+        window._relatedResults = related;
+        window._hasRelated = related.length > 0 && exact.length > 0;
+    } else {
+        window._relatedResults = [];
+        window._hasRelated = false;
     }
 
     /* Favourites */
@@ -1399,15 +1594,29 @@ function applyFilters() {
     filtered = items;
     renderedCount = 0;
     document.getElementById('audioGrid').innerHTML = '';
-    document.getElementById('resultsCount').textContent = filtered.length + ' audio' + (filtered.length !== 1 ? 's' : '');
 
-    if (!filtered.length) {
+    const relCount = (window._relatedResults || []).length;
+    let countText = filtered.length + ' audio' + (filtered.length !== 1 ? 's' : '');
+    if (relCount > 0 && searchQuery) {
+        countText += ` + ${relCount} related`;
+    }
+    document.getElementById('resultsCount').textContent = countText;
+
+    if (!filtered.length && !relCount) {
         document.getElementById('audioGrid').innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">~</div>
                 No audios match your filters.
             </div>`;
         return;
+    }
+
+    /* If no exact but have related, show related as main results */
+    if (!filtered.length && relCount > 0) {
+        filtered = window._relatedResults;
+        window._relatedResults = [];
+        window._hasRelated = false;
+        document.getElementById('resultsCount').textContent = relCount + ' related audio' + (relCount !== 1 ? 's' : '');
     }
 
     renderBatch();
@@ -1428,6 +1637,25 @@ function renderBatch() {
 
     grid.insertAdjacentHTML('beforeend', html);
     renderedCount = end;
+
+    /* When exact results are done, append related results with a divider */
+    if (renderedCount >= filtered.length && window._hasRelated && window._relatedResults.length) {
+        const relItems = window._relatedResults;
+        window._relatedResults = [];
+        window._hasRelated = false;
+
+        let relHTML = `<div class="related-divider" style="grid-column:1/-1;text-align:center;padding:1.5rem 0;margin:0.5rem 0">
+            <div style="display:flex;align-items:center;gap:1rem;justify-content:center">
+                <span style="flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,255,0.25))"></span>
+                <span style="font-family:var(--font-display);font-size:0.85rem;color:#ff00ff;text-transform:uppercase;letter-spacing:0.1em">✦ Related Content ✦</span>
+                <span style="flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,rgba(255,0,255,0.25),transparent)"></span>
+            </div>
+        </div>`;
+
+        relItems.forEach((a, i) => { relHTML += createCard(a, renderedCount + i); });
+        grid.insertAdjacentHTML('beforeend', relHTML);
+    }
+
     rendering = false;
 }
 
