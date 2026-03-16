@@ -1421,7 +1421,9 @@ function toggleTags(btn) {
 }
 
 function buildCredits(audio) {
-    if (audio.largeCollab) return `<div class="large-collab-notice">🎙️ This is a big collab, check the post to view all involved!</div>`;
+    if (audio.largeCollab || (audio.collabPartners && audio.collabPartners.toLowerCase().includes('big collab'))) {
+        return `<div class="large-collab-notice">🎙️ This is a big collab, check the post to view all involved!</div>`;
+    }
 
     const parts = [];
     if (audio.editor) {
