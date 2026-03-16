@@ -16,6 +16,7 @@ import io
 import os
 import urllib.request
 from datetime import datetime
+from difflib import SequenceMatcher
 
 # ─── Google Sheets published CSV URLs ────────────────────────────────
 # Replace these with your actual published CSV URLs.
@@ -23,9 +24,9 @@ from datetime import datetime
 # Use the format:
 #   https://docs.google.com/spreadsheets/d/e/XXXXX/pub?gid=0&single=true&output=csv
 
-REDDIT_CSV_URL   = os.environ.get("REDDIT_CSV_URL",   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTwzTGuoEEVeDQJxHzj7FD9yR95u3YH0kXNd3zN8dU_prcu24Wok7F2t6HWeuNT8Q_qxfj7PpZLBnTk/pub?output=csv")
-PATREON_CSV_URL  = os.environ.get("PATREON_CSV_URL",  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGzokFkt7XDy9OJEqAro2RjagSLpikBwWqAk8XofgYtuhXsDz7jk0A5UGFQt4089AGB9FL7mtqbh32/pubhtml")
-SUBSTAR_CSV_URL  = os.environ.get("SUBSTAR_CSV_URL",  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRD9m1pVAHRJ1gZeYDXqQddFHEqEDfesL1SmPPh4UmNimlO4W2nqpiqYpI0H9MpM_quDKdq_0Z-xF8E/pub?output=csv")
+REDDIT_CSV_URL   = os.environ.get("REDDIT_CSV_URL",   "YOUR_REDDIT_SHEET_CSV_URL_HERE")
+PATREON_CSV_URL  = os.environ.get("PATREON_CSV_URL",  "YOUR_PATREON_SHEET_CSV_URL_HERE")
+SUBSTAR_CSV_URL  = os.environ.get("SUBSTAR_CSV_URL",  "YOUR_SUBSTAR_SHEET_CSV_URL_HERE")
 
 OUTPUT_FILE = "audios.json"
 
@@ -339,6 +340,96 @@ def process_substar(rows):
     return entries
 
 
+# ─── Deduplication ────────────────────────────────────────────────
+
+def normalize_title(t):
+    """Strip emoji, punctuation, extra spaces, lowercase for fuzzy matching."""
+    t = re.sub(r"[^\w\s]", "", t.lower())
+    t = re.sub(r"\s+", " ", t).strip()
+    # Remove audience tags at start (f4m, ff4m, etc.)
+    t = re.sub(r"^(?:[fm]4[fmatfnb]+)\s+", "", t)
+    return t
+
+
+def deduplicate(entries):
+    """
+    Merge entries that appear on multiple platforms into a single entry.
+    Priority: Reddit > SubscribeStar > Patreon (Reddit keeps the primary data).
+    Matched entries get their links merged so one card shows all platform buttons.
+    """
+    FUZZY_THRESHOLD = 0.82
+
+    # Separate by platform
+    reddit_entries = [e for e in entries if e["platform"] == "reddit"]
+    other_entries  = [e for e in entries if e["platform"] != "reddit"]
+
+    # Build lookup of normalized Reddit titles
+    reddit_lookup = {}
+    for e in reddit_entries:
+        nt = normalize_title(e["title"])
+        if nt and len(nt) > 5:
+            reddit_lookup[nt] = e
+
+    merged_count = 0
+    remaining = []
+
+    for entry in other_entries:
+        nt = normalize_title(entry["title"])
+        if not nt or len(nt) <= 5:
+            remaining.append(entry)
+            continue
+
+        match = None
+
+        # 1. Try exact normalized match
+        if nt in reddit_lookup:
+            match = reddit_lookup[nt]
+
+        # 2. Try fuzzy match
+        if not match:
+            best_ratio = 0
+            best_key = None
+            for rkey in reddit_lookup:
+                ratio = SequenceMatcher(None, nt, rkey).ratio()
+                if ratio > best_ratio:
+                    best_ratio = ratio
+                    best_key = rkey
+            if best_ratio >= FUZZY_THRESHOLD and best_key:
+                match = reddit_lookup[best_key]
+
+        if match:
+            # Merge links from the duplicate into the Reddit entry
+            platform = entry["platform"]
+            for link_key, link_val in entry.get("links", {}).items():
+                if link_key not in match["links"] and link_val:
+                    match["links"][link_key] = link_val
+
+            # Merge categories (add any new ones)
+            existing_cats = set(match.get("categories", []))
+            for cat in entry.get("categories", []):
+                if cat not in existing_cats:
+                    match["categories"].append(cat)
+
+            # Use the longer duration if reddit is missing one
+            if not match.get("duration") and entry.get("duration"):
+                match["duration"] = entry["duration"]
+
+            # Use better description if reddit has none
+            if not match.get("description") and entry.get("description"):
+                match["description"] = entry["description"]
+
+            # Mark as available on multiple platforms
+            match["exclusive"] = False
+
+            merged_count += 1
+            print(f"   🔗 Merged: '{entry['title'][:50]}' ({platform}) → '{match['title'][:50]}' (reddit)")
+        else:
+            remaining.append(entry)
+
+    print(f"   Merged {merged_count} cross-platform duplicates")
+    return reddit_entries + remaining
+
+
 # ─── Main ────────────────────────────────────────────────────────────
 
 def main():
@@ -363,6 +454,11 @@ def main():
 
     print(f"   Total entries: {len(all_entries)}")
 
+    # Deduplicate cross-platform entries
+    print("\n3. Deduplicating cross-platform entries...")
+    all_entries = deduplicate(all_entries)
+    print(f"   Entries after dedup: {len(all_entries)}")
+
     # Sort by date descending (newest first)
     all_entries.sort(key=lambda e: e.get("date", ""), reverse=True)
 
@@ -379,7 +475,7 @@ def main():
     print(f"   {filter_categories}")
 
     # Remove empty fields to keep JSON lean
-    print("\n3. Cleaning up...")
+    print("\n4. Cleaning up...")
     for entry in all_entries:
         # Remove empty optional fields
         for key in ["writer", "writerLink", "collabPartners", "duration", "description"]:
