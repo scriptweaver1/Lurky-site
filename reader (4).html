@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Lurkydip — Script Reader. 18+ Only.">
+    <meta name="theme-color" content="#ff00ff">
+    <title>Script Reader | Lurkydip</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/opendyslexic" rel="stylesheet">
+
+    <style>
+    :root {
+        --ink:       #000000;
+        --deep-sea:  #160030;
+        --warm-gold: #ff00ff;
+        --soft-gold: #ff44ff;
+        --cream:     #ffffff;
+        --bronze:    #7700aa;
+        --font-display: 'Oswald', 'Impact', sans-serif;
+        --font-body:    'Open Sans', 'Helvetica Neue', sans-serif;
+        --font-size: 17px;
+        --content-width: 720px;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; font-size: var(--font-size); }
+
+    body {
+        font-family: var(--font-body);
+        background: var(--ink);
+        color: var(--cream);
+        min-height: 100vh;
+        line-height: 1.8;
+    }
+
+    body.font-arial    { font-family: Arial, sans-serif; }
+    body.font-atkinson { font-family: 'Atkinson Hyperlegible', sans-serif; }
+    body.font-dyslexic { font-family: 'OpenDyslexic', sans-serif; }
+
+    /* ─── Header ─── */
+    .reader-header {
+        padding: 1rem 2rem;
+        display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid rgba(255,0,255,0.08);
+        position: sticky; top: 0; z-index: 100;
+        background: rgba(0,0,0,0.92);
+        backdrop-filter: blur(12px);
+    }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        color: var(--warm-gold); text-decoration: none;
+        font-family: var(--font-display); font-size: 0.9rem;
+        text-transform: uppercase; letter-spacing: 0.08em;
+        transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--soft-gold); }
+    .back-link svg { width: 18px; height: 18px; }
+
+    .reader-controls {
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+    .ctrl-btn {
+        width: 36px; height: 36px; border-radius: 8px;
+        background: transparent; border: 1px solid rgba(255,0,255,0.10);
+        color: var(--warm-gold); cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.9rem;
+    }
+    .ctrl-btn:hover { border-color: rgba(255,0,255,0.25); background: rgba(255,0,255,0.05); }
+
+    /* ─── Script Content ─── */
+    .reader-container {
+        max-width: var(--content-width);
+        margin: 0 auto;
+        padding: 3rem 2rem 6rem;
+    }
+
+    .script-title {
+        font-family: var(--font-display);
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--warm-gold);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        line-height: 1.2;
+        margin-bottom: 0.5rem;
+    }
+    .script-meta {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.4);
+        margin-bottom: 0.8rem;
+    }
+    .script-meta a {
+        color: var(--warm-gold);
+        text-decoration: none;
+    }
+    .script-meta a:hover { text-decoration: underline; }
+
+    /* Category badges */
+    .reader-categories {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin-bottom: 0.8rem;
+    }
+    .reader-cat {
+        display: inline-block; font-size: 0.65rem; font-weight: 600;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        padding: 0.2rem 0.6rem;
+        background: rgba(255,0,255,0.08); border: 1px solid rgba(255,0,255,0.20);
+        color: #ff88ff;
+    }
+
+    /* Tags */
+    .reader-tags {
+        display: flex; flex-wrap: wrap; gap: 4px;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255,0,255,0.08);
+    }
+    .reader-tag {
+        padding: 0.2rem 0.55rem; font-size: 0.68rem;
+        background: rgba(255,0,255,0.06); border: 1px solid rgba(255,0,255,0.12);
+        color: rgba(255,255,255,0.55);
+        text-transform: uppercase; letter-spacing: 0.03em;
+    }
+
+    /* Markdown rendered content */
+    .script-body {
+        color: rgba(255,255,255,0.88);
+        font-size: 1rem;
+        line-height: 1.9;
+    }
+    .script-body h1 {
+        font-family: var(--font-display);
+        font-size: 1.8rem; font-weight: 600;
+        color: var(--warm-gold);
+        margin: 2rem 0 1rem;
+        text-transform: uppercase;
+    }
+    .script-body h2 {
+        font-family: var(--font-display);
+        font-size: 1.4rem; font-weight: 500;
+        color: var(--soft-gold);
+        margin: 1.8rem 0 0.8rem;
+    }
+    .script-body h3 {
+        font-size: 1.1rem; font-weight: 600;
+        color: #ff88ff;
+        margin: 1.5rem 0 0.6rem;
+    }
+    .script-body p {
+        margin-bottom: 1rem;
+    }
+    .script-body strong {
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .script-body em {
+        color: rgba(255,255,255,0.65);
+        font-style: italic;
+    }
+    .script-body a {
+        color: var(--warm-gold);
+        text-decoration: underline;
+        text-decoration-color: rgba(255,0,255,0.3);
+        transition: text-decoration-color 0.2s;
+    }
+    .script-body a:hover { text-decoration-color: var(--warm-gold); }
+
+    .script-body hr {
+        border: none;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,0,255,0.25), transparent);
+        margin: 2rem 0;
+    }
+
+    .script-body blockquote {
+        border-left: 3px solid var(--warm-gold);
+        padding: 0.8rem 1.2rem;
+        margin: 1rem 0;
+        background: rgba(255,0,255,0.04);
+        color: rgba(255,255,255,0.75);
+        font-style: italic;
+    }
+
+    .script-body ul, .script-body ol {
+        margin: 0.8rem 0 0.8rem 1.5rem;
+    }
+    .script-body li {
+        margin-bottom: 0.3rem;
+    }
+
+    .script-body code {
+        background: rgba(255,0,255,0.08);
+        padding: 0.15rem 0.4rem;
+        border-radius: 3px;
+        font-size: 0.9em;
+        color: #ff88ff;
+    }
+    .script-body pre {
+        background: rgba(255,0,255,0.05);
+        border: 1px solid rgba(255,0,255,0.10);
+        padding: 1rem 1.2rem;
+        margin: 1rem 0;
+        overflow-x: auto;
+        border-radius: 0;
+        font-size: 0.88rem;
+        line-height: 1.6;
+    }
+    .script-body pre code {
+        background: none; padding: 0;
+    }
+
+    /* Stage directions — lines in (parentheses) or *asterisks* */
+    .stage-direction {
+        color: rgba(255,0,255,0.55);
+        font-style: italic;
+    }
+
+    /* ─── Loading / Error states ─── */
+    .loading-state, .error-state {
+        text-align: center; padding: 4rem 2rem;
+        color: rgba(255,255,255,0.4);
+    }
+    .loading-spinner {
+        width: 32px; height: 32px;
+        border: 2px solid rgba(255,0,255,0.08);
+        border-top-color: var(--warm-gold);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-state { color: #ff6688; }
+
+    /* ─── Scroll progress bar ─── */
+    .progress-bar {
+        position: fixed; top: 0; left: 0; height: 3px;
+        background: linear-gradient(90deg, var(--bronze), var(--warm-gold));
+        z-index: 200; transition: width 0.1s;
+        box-shadow: 0 0 8px rgba(255,0,255,0.3);
+    }
+
+    /* ─── Scroll to top ─── */
+    .scroll-top {
+        position: fixed; bottom: 24px; right: 24px; z-index: 50;
+        width: 42px; height: 42px; border-radius: 50%;
+        background: rgba(160,0,200,0.10); border: 1px solid rgba(160,0,200,0.16);
+        backdrop-filter: blur(8px); color: var(--warm-gold);
+        cursor: pointer; font-size: 1.1rem;
+        display: none; align-items: center; justify-content: center;
+        transition: all 0.2s;
+    }
+    .scroll-top.visible { display: flex; }
+    .scroll-top:hover { background: rgba(160,0,200,0.16); transform: translateY(-2px); }
+
+    /* ─── Footer ─── */
+    .reader-footer {
+        text-align: center; padding: 2rem;
+        font-size: 0.7rem; color: rgba(255,255,255,0.15);
+        letter-spacing: 0.05em;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 680px) {
+        .reader-container { padding: 2rem 1.2rem 4rem; }
+        .script-title { font-size: 1.6rem; }
+        .reader-header { padding: 0.8rem 1rem; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(180,0,220,0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,0,255,0.25); }
+
+    ::selection { background: rgba(255,0,255,0.25); color: var(--cream); }
+    </style>
+</head>
+<body>
+
+    <!-- Progress bar -->
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+
+    <!-- Header -->
+    <header class="reader-header">
+        <a href="index.html" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to Masterlist
+        </a>
+        <div class="reader-controls">
+            <button class="ctrl-btn" onclick="changeFontSize(-1)" title="Smaller text">A−</button>
+            <button class="ctrl-btn" onclick="changeFontSize(1)" title="Larger text">A+</button>
+            <button class="ctrl-btn" onclick="cycleFont()" title="Change font" id="fontBtn">Aa</button>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <div class="reader-container" id="readerContainer">
+        <div class="loading-state" id="loadingState">
+            <div class="loading-spinner"></div>
+            Loading script…
+        </div>
+    </div>
+
+    <!-- Scroll to top -->
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+    <!-- Footer -->
+    <footer class="reader-footer">
+        © 2026 Lurkydip · Script Reader · 18+ Only · MDNI
+    </footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   MARKDOWN PARSER (lightweight, no deps)
+═══════════════════════════════════════════ */
+function parseMarkdown(md) {
+    let html = md;
+
+    /* Normalize line endings */
+    html = html.replace(/\r\n/g, '\n');
+
+    /* Escape HTML entities */
+    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    /* Code blocks (``` ... ```) — must come before other transformations */
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        return `<pre><code>${code.trim()}</code></pre>`;
+    });
+
+    /* Inline code */
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    /* Headings */
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    /* Horizontal rules */
+    html = html.replace(/^[\-\*\_]{3,}$/gm, '<hr>');
+
+    /* Blockquotes */
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+    /* Bold + italic */
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+    /* Links */
+    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    /* Unordered lists */
+    html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`);
+
+    /* Paragraphs: double newlines */
+    html = html.split(/\n{2,}/).map(block => {
+        block = block.trim();
+        if (!block) return '';
+        /* Don't wrap elements that are already block-level */
+        if (/^<(h[1-6]|hr|blockquote|ul|ol|pre|div)/.test(block)) return block;
+        return `<p>${block.replace(/\n/g, '<br>')}</p>`;
+    }).join('\n');
+
+    return html;
+}
+
+/* ═══════════════════════════════════════════
+   FONT CONTROLS
+═══════════════════════════════════════════ */
+let fontSize = 17;
+const fonts = ['', 'arial', 'atkinson', 'dyslexic'];
+const fontLabels = ['Aa', 'Ar', 'At', 'Dy'];
+let fontIdx = 0;
+
+function changeFontSize(d) {
+    fontSize = Math.max(12, Math.min(26, fontSize + d * 2));
+    document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+}
+
+function cycleFont() {
+    fontIdx = (fontIdx + 1) % fonts.length;
+    document.body.className = fonts[fontIdx] ? 'font-' + fonts[fontIdx] : '';
+    document.getElementById('fontBtn').textContent = fontLabels[fontIdx];
+}
+
+/* ═══════════════════════════════════════════
+   SCROLL PROGRESS
+═══════════════════════════════════════════ */
+window.addEventListener('scroll', () => {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = h > 0 ? (window.scrollY / h) * 100 : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
+});
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function esc(s) {
+    if (!s) return '';
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/* ═══════════════════════════════════════════
+   INIT — FETCH METADATA + SCRIPT
+═══════════════════════════════════════════ */
+async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const scriptFile = params.get('s');
+
+    if (!scriptFile) {
+        showError('No script specified. Use ?s=filename.md');
+        return;
+    }
+
+    try {
+        /* 1. Fetch audios.json to get card metadata */
+        const jsonResp = await fetch('./audios.json');
+        let audio = null;
+        if (jsonResp.ok) {
+            const json = await jsonResp.json();
+            const audios = json.audios || [];
+            audio = audios.find(a => a.links && a.links.scriptLocal === scriptFile);
+        }
+
+        /* 2. Fetch the markdown script */
+        const mdResp = await fetch(`./scripts/${scriptFile}`);
+        if (!mdResp.ok) throw new Error(`Script not found (${mdResp.status})`);
+        let md = await mdResp.text();
+
+        /* Strip YAML frontmatter if present */
+        const fmMatch = md.match(/^---\n[\s\S]*?\n---\n?([\s\S]*)$/);
+        if (fmMatch) md = fmMatch[1];
+
+        /* Strip first heading if it exists (title comes from JSON) */
+        md = md.replace(/^#\s+.+\n?/, '').trim();
+
+        /* 3. Build header from JSON metadata (or fallback to filename) */
+        const title = audio?.title || scriptFile.replace(/\.md$/i, '').replace(/[-_]/g, ' ');
+        const writer = audio?.writer || '';
+        const writerLink = audio?.writerLink || ((/^[\w_-]+$/.test(writer) && writer.length > 1) ? `https://reddit.com/u/${encodeURIComponent(writer)}` : '');
+        const tags = audio?.tags || [];
+        const categories = audio?.categories || [];
+        const date = audio?.date || '';
+        const duration = audio?.duration || '';
+        const collabPartners = audio?.collabPartners || '';
+
+        document.title = `${title} | Lurkydip Script Reader`;
+
+        /* Meta line: date + duration */
+        const metaParts = [];
+        if (date) metaParts.push(formatDate(date));
+        if (duration) metaParts.push(duration + ' min');
+        const metaLine = metaParts.length ? `<span style="margin-right:1rem">${metaParts.join(' · ')}</span>` : '';
+
+        /* Writer */
+        let writerHTML = '';
+        if (writer) {
+            const safe = esc(writer);
+            writerHTML = writerLink
+                ? `<span>Written by <a href="${esc(writerLink)}" target="_blank" rel="noopener">${safe}</a></span>`
+                : `<span>Written by ${safe}</span>`;
+        }
+
+        /* Collab partners */
+        let collabHTML = '';
+        if (collabPartners && !collabPartners.toLowerCase().includes('big collab')) {
+            const linked = collabPartners.split(',').map(name => {
+                name = name.trim();
+                if (!name) return '';
+                const safe = esc(name);
+                if (/^[\w_-]+$/.test(name) && name.length > 1) {
+                    return `<a href="https://reddit.com/u/${encodeURIComponent(name)}" target="_blank" rel="noopener">${safe}</a>`;
+                }
+                return safe;
+            }).filter(Boolean).join(', ');
+            collabHTML = `<span style="margin-left:0.5rem">🎙️ w/ ${linked}</span>`;
+        }
+
+        /* Tags */
+        let tagsHTML = '';
+        if (tags.length) {
+            tagsHTML = `<div class="reader-tags">${tags.map(t => `<span class="reader-tag">${esc(t)}</span>`).join('')}</div>`;
+        }
+
+        /* Category badges */
+        let catsHTML = '';
+        if (categories.length) {
+            catsHTML = `<div class="reader-categories">${categories.map(c => `<span class="reader-cat">${esc(c)}</span>`).join('')}</div>`;
+        }
+
+        /* Render */
+        const container = document.getElementById('readerContainer');
+        container.innerHTML = `
+            ${catsHTML}
+            <h1 class="script-title">${esc(title)}</h1>
+            <div class="script-meta">
+                ${metaLine}${writerHTML}${collabHTML}
+            </div>
+            ${tagsHTML}
+            <div class="script-body">${parseMarkdown(md)}</div>
+        `;
+
+    } catch (err) {
+        showError(err.message);
+    }
+}
+
+function showError(msg) {
+    document.getElementById('readerContainer').innerHTML = `
+        <div class="error-state">
+            <div style="font-size:2rem;margin-bottom:1rem;opacity:0.3">⚠</div>
+            ${msg}<br>
+            <a href="index.html" style="color:#ff00ff;margin-top:1rem;display:inline-block">← Back to Masterlist</a>
+        </div>`;
+}
+
+init();
+</script>
+</body>
+</html>
