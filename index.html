@@ -1518,12 +1518,18 @@ function createCard(audio, idx) {
 
     let writerHTML = '';
     if (audio.writer) {
-        const writerName = esc(audio.writer);
-        /* Auto-link to reddit profile if no explicit link provided */
-        const writerLink = audio.writerLink || ((/^[\w_-]+$/.test(audio.writer) && audio.writer.length > 1) ? `https://reddit.com/u/${encodeURIComponent(audio.writer)}` : '');
-        writerHTML = writerLink
-            ? `<div class="card-writer">Written by: <a href="${esc(writerLink)}" target="_blank" rel="noopener">${writerName}</a></div>`
-            : `<div class="card-writer">Written by: ${writerName}</div>`;
+        /* Split multiple writers by comma, ampersand, or " and " */
+        const names = audio.writer.split(/\s*[,&]\s*|\s+and\s+/i).map(n => n.trim()).filter(Boolean);
+        const linked = names.map(name => {
+            /* Strip u/ prefix */
+            const clean = name.replace(/^u\//, '');
+            const safe = esc(clean);
+            if (/^[\w_-]+$/.test(clean) && clean.length > 1) {
+                return `<a href="https://reddit.com/u/${encodeURIComponent(clean)}" target="_blank" rel="noopener">${safe}</a>`;
+            }
+            return safe;
+        }).join(', ');
+        writerHTML = `<div class="card-writer">Written by: ${linked}</div>`;
     }
 
     return `
