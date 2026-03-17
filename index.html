@@ -208,22 +208,27 @@
     ═══════════════════════════════════════════ */
     .site-header {
         padding: 1.2rem 2rem;
-        display: flex; align-items: center; justify-content: space-between;
+        display: flex; align-items: center; justify-content: center;
         border-bottom: 1px solid rgba(140,0,180,0.06);
         position: sticky; top: 0; z-index: 100;
         background: rgba(10,0,18,0.80);
         backdrop-filter: blur(12px);
     }
     .logo-area {
-        display: flex; align-items: center;
+        display: flex; align-items: center; justify-content: center;
         text-decoration: none; color: inherit;
+        flex: 1;
     }
     .logo-img {
-        height: 48px;
+        height: 80px;
+        max-width: 500px;
         width: auto;
         object-fit: contain;
     }
-    .header-actions { display: flex; align-items: center; gap: 0.6rem; }
+    .header-actions { 
+        display: flex; align-items: center; gap: 0.6rem;
+        position: absolute; right: 2rem;
+    }
     .header-btn {
         width: 38px; height: 38px; border-radius: 8px;
         background: transparent; border: 1px solid rgba(160,0,200,0.08);
@@ -687,7 +692,8 @@
         }
         .main-content { padding: 1rem; }
         .site-header { padding: 0.8rem 1rem; }
-        .logo-img { height: 32px; }
+        .logo-img { height: 50px; max-width: 280px; }
+        .header-actions { right: 1rem; }
         .controls-bar { gap: 0.5rem; }
     }
 
