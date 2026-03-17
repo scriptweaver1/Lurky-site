@@ -455,7 +455,6 @@ async function init() {
         /* 3. Build header from JSON metadata (or fallback to filename) */
         const title = audio?.title || scriptFile.replace(/\.md$/i, '').replace(/[-_]/g, ' ');
         const writer = audio?.writer || '';
-        const writerLink = audio?.writerLink || ((/^[\w_-]+$/.test(writer) && writer.length > 1) ? `https://reddit.com/u/${encodeURIComponent(writer)}` : '');
         const tags = audio?.tags || [];
         const categories = audio?.categories || [];
         const date = audio?.date || '';
@@ -473,10 +472,16 @@ async function init() {
         /* Writer */
         let writerHTML = '';
         if (writer) {
-            const safe = esc(writer);
-            writerHTML = writerLink
-                ? `<span>Written by <a href="${esc(writerLink)}" target="_blank" rel="noopener">${safe}</a></span>`
-                : `<span>Written by ${safe}</span>`;
+            const names = writer.split(/\s*[,&]\s*|\s+and\s+/i).map(n => n.trim()).filter(Boolean);
+            const linked = names.map(name => {
+                const clean = name.replace(/^u\//, '');
+                const safe = esc(clean);
+                if (/^[\w_-]+$/.test(clean) && clean.length > 1) {
+                    return `<a href="https://reddit.com/u/${encodeURIComponent(clean)}" target="_blank" rel="noopener">${safe}</a>`;
+                }
+                return safe;
+            }).join(', ');
+            writerHTML = `<span>Written by ${linked}</span>`;
         }
 
         /* Collab partners */
