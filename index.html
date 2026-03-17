@@ -1408,8 +1408,8 @@ function buildTags(tags) {
     let html = '<div class="card-tags">';
     visible.forEach(t => { html += `<span class="tag" onclick="event.stopPropagation();searchByTag('${esc(t)}')">${esc(t)}</span>`; });
     if (hidden.length) {
-        html += `<button class="tags-toggle" onclick="event.stopPropagation();toggleTags(this)">+${hidden.length} more</button>`;
-        hidden.forEach(t => { html += `<span class="tag" style="display:none" onclick="event.stopPropagation();searchByTag('${esc(t)}')">${esc(t)}</span>`; });
+        html += `<button class="tags-toggle" data-expanded="false" onclick="event.stopPropagation();toggleTags(this)">+${hidden.length} more</button>`;
+        hidden.forEach(t => { html += `<span class="tag tag-extra" style="display:none" onclick="event.stopPropagation();searchByTag('${esc(t)}')">${esc(t)}</span>`; });
     }
     html += '</div>';
     return html;
@@ -1417,17 +1417,19 @@ function buildTags(tags) {
 
 function toggleTags(btn) {
     const wrap = btn.parentElement;
-    const hiddenTags = wrap.querySelectorAll('.tag[style*="display:none"]');
-    const visibleExtra = wrap.querySelectorAll('.tag.tag-revealed');
-    if (hiddenTags.length) {
-        hiddenTags.forEach(t => { t.style.display = ''; t.classList.add('tag-revealed'); });
-        btn.textContent = '− Show less';
+    const extraTags = wrap.querySelectorAll('.tag-extra');
+    const isExpanded = btn.dataset.expanded === 'true';
+
+    if (isExpanded) {
+        /* Collapse */
+        extraTags.forEach(t => { t.style.display = 'none'; });
+        btn.textContent = `+${extraTags.length} more`;
+        btn.dataset.expanded = 'false';
     } else {
-        visibleExtra.forEach(t => { t.style.display = 'none'; t.classList.remove('tag-revealed'); });
-        btn.textContent = `+${visibleExtra.length + wrap.querySelectorAll('.tag[style*="display:none"]').length} more`;
-        /* recount hidden */
-        const recount = wrap.querySelectorAll('.tag[style*="display:none"]').length;
-        btn.textContent = `+${recount} more`;
+        /* Expand */
+        extraTags.forEach(t => { t.style.display = ''; });
+        btn.textContent = '− Show less';
+        btn.dataset.expanded = 'true';
     }
 }
 
