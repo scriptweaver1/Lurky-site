@@ -218,10 +218,10 @@
         display: flex; align-items: center;
         text-decoration: none; color: inherit;
     }
-    .logo-title {
-        font-family: var(--font-display); font-weight: 700; font-size: 3rem;
-        color: var(--dark-gold); letter-spacing: 0.04em;
-        text-transform: uppercase;
+    .logo-img {
+        height: 48px;
+        width: auto;
+        object-fit: contain;
     }
     .header-actions { display: flex; align-items: center; gap: 0.6rem; }
     .header-btn {
@@ -687,7 +687,7 @@
         }
         .main-content { padding: 1rem; }
         .site-header { padding: 0.8rem 1rem; }
-        .logo-title { font-size: 1.8rem; }
+        .logo-img { height: 32px; }
         .controls-bar { gap: 0.5rem; }
     }
 
@@ -791,7 +791,7 @@
     <!-- Header -->
     <header class="site-header">
         <a href="#" class="logo-area">
-            <h1 class="logo-title">Lurky's Masterlist</h1>
+            <img src="lurkydip_font.png" alt="Lurkydip" class="logo-img">
         </a>
         <div class="header-actions">
             <!-- Mobile menu toggle -->
