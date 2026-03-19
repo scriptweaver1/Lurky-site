@@ -798,8 +798,8 @@
         <div class="a11y-section">
             <span class="a11y-label">Card Mode</span>
             <div class="font-style-options" id="cardModeOptions">
-                <button class="font-opt active" data-cardmode="condensed" onclick="setCardMode('condensed')">Condensed</button>
-                <button class="font-opt" data-cardmode="detailed" onclick="setCardMode('detailed')">Detailed</button>
+                <button class="font-opt" data-cardmode="condensed" onclick="setCardMode('condensed')">Condensed</button>
+                <button class="font-opt active" data-cardmode="detailed" onclick="setCardMode('detailed')">Detailed</button>
             </div>
         </div>
         <button class="a11y-reset" onclick="resetA11y()">↺ Reset to Defaults</button>
@@ -888,7 +888,7 @@
             </div>
 
             <!-- Audio grid -->
-            <div class="audio-grid view-3 card-condensed" id="audioGrid">
+            <div class="audio-grid view-3 card-detailed" id="audioGrid">
                 <div class="loading-state" id="loadingState">
                     <div class="loading-spinner"></div>
                     Loading audios…
@@ -1048,11 +1048,11 @@ function resetA11y() {
     sSet('lurky_fontsize', '');
     sSet('lurky_fontstyle', '');
     applyA11y();
-    setCardMode('condensed');
+    setCardMode('detailed');
 }
 
 /* Card mode: condensed (default) or detailed */
-let cardMode = sGet('lurky_cardmode') || 'condensed';
+let cardMode = sGet('lurky_cardmode') || 'detailed';
 function setCardMode(mode) {
     cardMode = mode;
     sSet('lurky_cardmode', mode);
