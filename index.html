@@ -229,6 +229,10 @@
         display: flex; align-items: center; gap: 0.6rem;
         position: absolute; right: 2rem;
     }
+    .header-left {
+        display: flex; align-items: center; gap: 0.6rem;
+        position: absolute; left: 2rem;
+    }
     .header-btn {
         width: 38px; height: 38px; border-radius: 8px;
         background: transparent; border: 1px solid rgba(160,0,200,0.08);
@@ -255,7 +259,7 @@
         position: sticky; top: 64px; height: calc(100vh - 64px);
         overflow-y: auto;
         scrollbar-width: thin;
-        scrollbar-color: rgba(140,0,180,0.12) transparent;
+        scrollbar-color: rgba(255,0,255,0.40) rgba(20,0,30,0.3);
         background: rgba(10,0,18,0.55);
         backdrop-filter: blur(6px);
     }
@@ -676,6 +680,7 @@
     }
     @media (min-width: 901px) {
         .mobile-menu-btn { display: none !important; }
+        .header-left { display: none !important; }
         .sidebar-overlay { display: none !important; }
     }
     @media (max-width: 680px) {
@@ -692,8 +697,9 @@
         }
         .main-content { padding: 1rem; }
         .site-header { padding: 0.8rem 1rem; }
-        .logo-img { height: 50px; max-width: 280px; }
-        .header-actions { right: 1rem; }
+        .logo-img { height: 44px; max-width: 220px; }
+        .header-actions { right: 0.8rem; }
+        .header-left { left: 0.8rem; }
         .controls-bar { gap: 0.5rem; }
     }
 
@@ -735,11 +741,12 @@
         box-shadow: 0 0 20px rgba(140,0,180,0.06), inset 0 0 12px rgba(140,0,180,0.03);
     }
 
-    /* Scrollbar — thin warm bronze */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(180,0,220,0.15); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,0,255,0.25); }
+    /* Scrollbar — vibrant magenta */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(20,0,30,0.5); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,0,255,0.45); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,0,255,0.7); }
+    * { scrollbar-width: thin; scrollbar-color: rgba(255,0,255,0.45) rgba(20,0,30,0.5); }
     </style>
 </head>
 <body>
@@ -796,14 +803,15 @@
 
     <!-- Header -->
     <header class="site-header">
-        <a href="#" class="logo-area">
-            <img src="lurkydip_font.png" alt="Lurkydip" class="logo-img">
-        </a>
-        <div class="header-actions">
-            <!-- Mobile menu toggle -->
+        <div class="header-left">
             <button class="header-btn mobile-menu-btn" onclick="toggleMobileNav()" title="Menu">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
+        </div>
+        <a href="index.html" class="logo-area">
+            <img src="lurkydip_font.png" alt="Lurkydip" class="logo-img">
+        </a>
+        <div class="header-actions">
             <!-- Search toggle -->
             <button class="header-btn" onclick="toggleSearch()" title="Search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1747,6 +1755,17 @@ async function init() {
 document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', init)
     : init();
+
+/* Force all external links to open in new tabs */
+document.addEventListener('click', e => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    const href = a.getAttribute('href');
+    if (href && (href.startsWith('http') || href.startsWith('//'))) {
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener');
+    }
+});
 </script>
 </body>
 </html>
