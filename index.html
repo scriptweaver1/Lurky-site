@@ -1410,7 +1410,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 
 function buildTags(tags) {
     if (!tags || !tags.length) return '';
-    const MAX_VISIBLE = 5;
+    const MAX_VISIBLE = 10;
     const visible = tags.slice(0, MAX_VISIBLE);
     const hidden = tags.slice(MAX_VISIBLE);
     let html = '<div class="card-tags">';
