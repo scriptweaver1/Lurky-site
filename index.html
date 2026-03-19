@@ -464,6 +464,10 @@
         padding: 0.2rem 0.6rem; border-radius: 0; margin-bottom: 0.6rem;
         width: fit-content;
     }
+    .card-type-clickable {
+        cursor: pointer; transition: filter 0.2s, transform 0.2s;
+    }
+    .card-type-clickable:hover { filter: brightness(1.3); transform: translateY(-1px); }
 
     /* Card title — big bold uppercase like the image */
     .card-title {
@@ -1257,6 +1261,19 @@ function searchByTag(tag) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+/* ── Category badge click → filter ── */
+function filterByCategory(cat) {
+    currentFilter = cat;
+    document.querySelectorAll('.filter-item').forEach(i => i.classList.toggle('active', i.dataset.type === cat));
+    document.getElementById('sectionTitle').textContent = cat;
+    /* Clear any active search so category filter is visible */
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchClear').classList.remove('visible');
+    applyFilters();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 /* ═══════════════════════════════════════════════════════
    MOBILE NAV
 ═══════════════════════════════════════════════════════ */
@@ -1520,7 +1537,7 @@ function createCard(audio, idx) {
             const s = getCatStyle(cat);
             const bg = getCatBg(s.color);
             const bd = getCatBd(s.color);
-            badgesHTML += `<span class="card-type" style="background:${bg};border:1px solid ${bd};color:${s.color}">${s.emoji} ${cat}</span>`;
+            badgesHTML += `<span class="card-type card-type-clickable" style="background:${bg};border:1px solid ${bd};color:${s.color}" onclick="event.stopPropagation();filterByCategory('${esc(cat)}')">${s.emoji} ${cat}</span>`;
         });
     } else {
         const s = DEFAULT_CAT_STYLE;
@@ -1756,14 +1773,14 @@ document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', init)
     : init();
 
-/* Force all external links to open in new tabs */
+/* Force all external links to open in new tabs (iOS Chrome compatible) */
 document.addEventListener('click', e => {
     const a = e.target.closest('a[href]');
     if (!a) return;
     const href = a.getAttribute('href');
     if (href && (href.startsWith('http') || href.startsWith('//'))) {
-        a.setAttribute('target', '_blank');
-        a.setAttribute('rel', 'noopener');
+        e.preventDefault();
+        window.open(href, '_blank', 'noopener');
     }
 });
 </script>
