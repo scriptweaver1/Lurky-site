@@ -1,0 +1,5 @@
+/audios.json
+  Cache-Control: public, max-age=300, must-revalidate
+
+/scripts/*
+  Cache-Control: public, max-age=300, must-revalidate
