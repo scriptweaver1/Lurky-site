@@ -432,7 +432,7 @@ async function init() {
 
     try {
         /* 1. Fetch audios.json to get card metadata */
-        const jsonResp = await fetch('./audios.json');
+        const jsonResp = await fetch('./audios.json?v=' + Date.now());
         let audio = null;
         if (jsonResp.ok) {
             const json = await jsonResp.json();
@@ -538,6 +538,17 @@ function showError(msg) {
 }
 
 init();
+
+/* Force all external links to open in new tabs (iOS Chrome compatible) */
+document.addEventListener('click', e => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    const href = a.getAttribute('href');
+    if (href && (href.startsWith('http') || href.startsWith('//'))) {
+        e.preventDefault();
+        window.open(href, '_blank', 'noopener');
+    }
+});
 </script>
 </body>
 </html>
