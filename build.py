@@ -373,80 +373,71 @@ def normalize_title(t):
 def deduplicate(entries):
     """
     Merge entries that appear on multiple platforms into a single entry.
-    Priority: Reddit > SubscribeStar > Patreon (Reddit keeps the primary data).
-    Matched entries get their links merged so one card shows all platform buttons.
+    Priority: Reddit > SubscribeStar > Patreon.
+    Uses exact + fuzzy (82%+) normalized title matching across all platforms.
     """
     FUZZY_THRESHOLD = 0.82
+    PLATFORM_PRIORITY = {"reddit": 0, "subscribestar": 1, "patreon": 2}
 
-    # Separate by platform
-    reddit_entries = [e for e in entries if e["platform"] == "reddit"]
-    other_entries  = [e for e in entries if e["platform"] != "reddit"]
+    def priority(e):
+        return PLATFORM_PRIORITY.get(e.get("platform", ""), 99)
 
-    # Build lookup of normalized Reddit titles
-    reddit_lookup = {}
-    for e in reddit_entries:
+    # Sort by priority so higher-priority entries come first
+    entries.sort(key=priority)
+
+    indexed = []
+    for e in entries:
         nt = normalize_title(e["title"])
-        if nt and len(nt) > 5:
-            reddit_lookup[nt] = e
+        indexed.append((nt if nt and len(nt) > 5 else "", e))
 
+    merged_into = set()
     merged_count = 0
-    remaining = []
 
-    for entry in other_entries:
-        nt = normalize_title(entry["title"])
-        if not nt or len(nt) <= 5:
-            remaining.append(entry)
+    for i in range(len(indexed)):
+        if i in merged_into:
+            continue
+        nt_i, entry_i = indexed[i]
+        if not nt_i:
             continue
 
-        match = None
+        for j in range(i + 1, len(indexed)):
+            if j in merged_into:
+                continue
+            nt_j, entry_j = indexed[j]
+            if not nt_j:
+                continue
+            if entry_i["platform"] == entry_j["platform"]:
+                continue
 
-        # 1. Try exact normalized match
-        if nt in reddit_lookup:
-            match = reddit_lookup[nt]
+            is_match = (nt_i == nt_j)
+            if not is_match and len(nt_i) > 10 and len(nt_j) > 10:
+                is_match = SequenceMatcher(None, nt_i, nt_j).ratio() >= FUZZY_THRESHOLD
 
-        # 2. Try fuzzy match
-        if not match:
-            best_ratio = 0
-            best_key = None
-            for rkey in reddit_lookup:
-                ratio = SequenceMatcher(None, nt, rkey).ratio()
-                if ratio > best_ratio:
-                    best_ratio = ratio
-                    best_key = rkey
-            if best_ratio >= FUZZY_THRESHOLD and best_key:
-                match = reddit_lookup[best_key]
+            if is_match:
+                for link_key, link_val in entry_j.get("links", {}).items():
+                    if link_key not in entry_i["links"] and link_val:
+                        entry_i["links"][link_key] = link_val
 
-        if match:
-            # Merge links from the duplicate into the Reddit entry
-            platform = entry["platform"]
-            for link_key, link_val in entry.get("links", {}).items():
-                if link_key not in match["links"] and link_val:
-                    match["links"][link_key] = link_val
+                existing_cats = set(entry_i.get("categories", []))
+                for cat in entry_j.get("categories", []):
+                    if cat not in existing_cats:
+                        entry_i["categories"].append(cat)
 
-            # Merge categories (add any new ones)
-            existing_cats = set(match.get("categories", []))
-            for cat in entry.get("categories", []):
-                if cat not in existing_cats:
-                    match["categories"].append(cat)
+                if not entry_i.get("duration") and entry_j.get("duration"):
+                    entry_i["duration"] = entry_j["duration"]
+                if not entry_i.get("description") and entry_j.get("description"):
+                    entry_i["description"] = entry_j["description"]
 
-            # Use the longer duration if reddit is missing one
-            if not match.get("duration") and entry.get("duration"):
-                match["duration"] = entry["duration"]
+                if entry_i["platform"] == "reddit" or entry_j["platform"] == "reddit":
+                    entry_i["exclusive"] = False
 
-            # Use better description if reddit has none
-            if not match.get("description") and entry.get("description"):
-                match["description"] = entry["description"]
+                merged_into.add(j)
+                merged_count += 1
+                print(f"   🔗 Merged: '{entry_j['title'][:50]}' ({entry_j['platform']}) → '{entry_i['title'][:50]}' ({entry_i['platform']})")
 
-            # Mark as available on multiple platforms
-            match["exclusive"] = False
-
-            merged_count += 1
-            print(f"   🔗 Merged: '{entry['title'][:50]}' ({platform}) → '{match['title'][:50]}' (reddit)")
-        else:
-            remaining.append(entry)
-
+    result = [e for idx, (_, e) in enumerate(indexed) if idx not in merged_into]
     print(f"   Merged {merged_count} cross-platform duplicates")
-    return reddit_entries + remaining
+    return result
 
 
 # ─── Main ────────────────────────────────────────────────────────────
