@@ -374,8 +374,7 @@ def deduplicate(entries):
     """
     Merge entries that appear on multiple platforms into a single entry.
     Priority: Reddit > SubscribeStar > Patreon.
-    When merging, the higher-priority entry keeps its data, the lower one
-    contributes its links. Works across ALL platform pairs.
+    Uses exact + fuzzy (82%+) normalized title matching across all platforms.
     """
     FUZZY_THRESHOLD = 0.82
     PLATFORM_PRIORITY = {"reddit": 0, "subscribestar": 1, "patreon": 2}
@@ -386,16 +385,12 @@ def deduplicate(entries):
     # Sort by priority so higher-priority entries come first
     entries.sort(key=priority)
 
-    # Build list of (normalized_title, entry) for matching
     indexed = []
     for e in entries:
         nt = normalize_title(e["title"])
-        if nt and len(nt) > 5:
-            indexed.append((nt, e))
-        else:
-            indexed.append(("", e))
+        indexed.append((nt if nt and len(nt) > 5 else "", e))
 
-    merged_into = set()  # indices of entries that were merged into another
+    merged_into = set()
     merged_count = 0
 
     for i in range(len(indexed)):
@@ -411,41 +406,28 @@ def deduplicate(entries):
             nt_j, entry_j = indexed[j]
             if not nt_j:
                 continue
-
-            # Skip same platform
             if entry_i["platform"] == entry_j["platform"]:
                 continue
 
-            # Check match
-            is_match = False
-            if nt_i == nt_j:
-                is_match = True
-            elif len(nt_i) > 10 and len(nt_j) > 10:
-                ratio = SequenceMatcher(None, nt_i, nt_j).ratio()
-                if ratio >= FUZZY_THRESHOLD:
-                    is_match = True
+            is_match = (nt_i == nt_j)
+            if not is_match and len(nt_i) > 10 and len(nt_j) > 10:
+                is_match = SequenceMatcher(None, nt_i, nt_j).ratio() >= FUZZY_THRESHOLD
 
             if is_match:
-                # Merge j into i (i has higher or equal priority)
                 for link_key, link_val in entry_j.get("links", {}).items():
                     if link_key not in entry_i["links"] and link_val:
                         entry_i["links"][link_key] = link_val
 
-                # Merge categories
                 existing_cats = set(entry_i.get("categories", []))
                 for cat in entry_j.get("categories", []):
                     if cat not in existing_cats:
                         entry_i["categories"].append(cat)
 
-                # Use longer duration if primary is missing
                 if not entry_i.get("duration") and entry_j.get("duration"):
                     entry_i["duration"] = entry_j["duration"]
-
-                # Use better description if primary has none
                 if not entry_i.get("description") and entry_j.get("description"):
                     entry_i["description"] = entry_j["description"]
 
-                # No longer exclusive if it's on Reddit
                 if entry_i["platform"] == "reddit" or entry_j["platform"] == "reddit":
                     entry_i["exclusive"] = False
 
