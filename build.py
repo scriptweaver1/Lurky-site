@@ -131,11 +131,11 @@ def parse_date_universal(d):
         if month:
             return f"{m.group(3)}-{month}-{m.group(2).zfill(2)}"
 
-    # MM/DD/YYYY or M/D/YYYY (US format — Google Sheets default)
+    # DD/MM/YYYY or D/M/YYYY (Google Sheets with Brazilian/European locale)
     m = re.match(r"(\d{1,2})/(\d{1,2})/(\d{4})", d)
     if m:
-        month = m.group(1).zfill(2)
-        day = m.group(2).zfill(2)
+        day = m.group(1).zfill(2)
+        month = m.group(2).zfill(2)
         year = m.group(3)
         return f"{year}-{month}-{day}"
 
