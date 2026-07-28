@@ -87,31 +87,88 @@ def parse_categories(raw):
     return [c for c in parts if c]
 
 
-def parse_date_reddit(d):
-    """Parse YYYY-MM-DD."""
+def parse_date_universal(d):
+    """
+    Parse dates from any common format Google Sheets might export.
+    Handles: YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY, M/D/YYYY,
+    '21 jul., 2025' (Portuguese), 'Jul 21, 2025', '21 Jul 2025', etc.
+    """
     d = (d or "").strip()
+    if not d:
+        return ""
+
+    # Already YYYY-MM-DD
     if re.match(r"\d{4}-\d{2}-\d{2}", d):
         return d[:10]
-    return ""
 
+    # ISO with time: 2025-07-21T...
+    m = re.match(r"(\d{4}-\d{2}-\d{2})T", d)
+    if m:
+        return m.group(1)
 
-def parse_date_patreon(d):
-    """Parse YYYY-MM-DD (same format)."""
-    return parse_date_reddit(d)
-
-
-def parse_date_substar(d):
-    """Parse Portuguese format: '21 jul., 2025' → '2025-07-21'."""
-    d = (d or "").strip()
+    # Portuguese: '21 jul., 2025' or '21 jul, 2025' or '21 jul. 2025'
     m = re.match(r"(\d{1,2})\s+(\w+)\.?,?\s*(\d{4})", d)
     if m:
         day = m.group(1).zfill(2)
-        month_abbr = m.group(2).lower()
+        month_abbr = m.group(2).lower()[:3]
         year = m.group(3)
-        month = PT_MONTHS.get(month_abbr, "01")
+        month = PT_MONTHS.get(month_abbr)
+        if month:
+            return f"{year}-{month}-{day}"
+        # Try English month abbreviations
+        en_months = {"jan":"01","feb":"02","mar":"03","apr":"04","may":"05","jun":"06",
+                     "jul":"07","aug":"08","sep":"09","oct":"10","nov":"11","dec":"12"}
+        month = en_months.get(month_abbr)
+        if month:
+            return f"{year}-{month}-{day}"
+
+    # English: 'Jul 21, 2025' or 'July 21, 2025'
+    m = re.match(r"(\w+)\s+(\d{1,2}),?\s*(\d{4})", d)
+    if m:
+        en_months = {"jan":"01","feb":"02","mar":"03","apr":"04","may":"05","jun":"06",
+                     "jul":"07","aug":"08","sep":"09","oct":"10","nov":"11","dec":"12"}
+        month = en_months.get(m.group(1).lower()[:3])
+        if month:
+            return f"{m.group(3)}-{month}-{m.group(2).zfill(2)}"
+
+    # MM/DD/YYYY or M/D/YYYY (US format — Google Sheets default)
+    m = re.match(r"(\d{1,2})/(\d{1,2})/(\d{4})", d)
+    if m:
+        month = m.group(1).zfill(2)
+        day = m.group(2).zfill(2)
+        year = m.group(3)
         return f"{year}-{month}-{day}"
-    # Fallback: try YYYY-MM-DD
-    return parse_date_reddit(d)
+
+    # DD/MM/YYYY (less common but possible)
+    # Can't distinguish from MM/DD/YYYY without context, so we default to MM/DD/YYYY above
+
+    # DD-MM-YYYY
+    m = re.match(r"(\d{1,2})-(\d{1,2})-(\d{4})", d)
+    if m:
+        day = m.group(1).zfill(2)
+        month = m.group(2).zfill(2)
+        year = m.group(3)
+        return f"{year}-{month}-{day}"
+
+    # DD.MM.YYYY
+    m = re.match(r"(\d{1,2})\.(\d{1,2})\.(\d{4})", d)
+    if m:
+        day = m.group(1).zfill(2)
+        month = m.group(2).zfill(2)
+        year = m.group(3)
+        return f"{year}-{month}-{day}"
+
+    return ""
+
+
+def parse_date_reddit(d):
+    return parse_date_universal(d)
+
+def parse_date_patreon(d):
+    return parse_date_universal(d)
+
+def parse_date_substar(d):
+    return parse_date_universal(d)
 
 
 def parse_duration(raw):
