@@ -1335,6 +1335,7 @@ function togglePlatform(platform) {
     const btnId = platform === 'subscribestar' ? 'toggleSubstar' : 
                   platform === 'patreon' ? 'togglePatreon' : 'toggleReddit';
     document.getElementById(btnId).classList.toggle('active', !hiddenPlatforms.has(platform));
+    buildFilters();
     applyFilters();
 }
 
@@ -1376,11 +1377,16 @@ function buildFilters() {
     const list = document.getElementById('filterList');
     list.innerHTML = '';
 
+    /* Get visible audios (respecting platform filter) */
+    const visibleAudios = hiddenPlatforms.size > 0
+        ? allAudios.filter(a => !isHiddenByPlatform(a))
+        : allAudios;
+
     /* "All" always first */
     const allLi = document.createElement('li');
     allLi.className = 'filter-item' + (currentFilter === 'all' ? ' active' : '');
     allLi.dataset.type = 'all';
-    allLi.innerHTML = `<span><span class="emoji">${ALL_LABEL.emoji}</span>${ALL_LABEL.label}</span><span class="filter-count">${allAudios.length}</span>`;
+    allLi.innerHTML = `<span><span class="emoji">${ALL_LABEL.emoji}</span>${ALL_LABEL.label}</span><span class="filter-count">${visibleAudios.length}</span>`;
     allLi.addEventListener('click', () => {
         currentFilter = 'all';
         document.querySelectorAll('.filter-item').forEach(i => i.classList.toggle('active', i.dataset.type === 'all'));
@@ -1390,9 +1396,9 @@ function buildFilters() {
     });
     list.appendChild(allLi);
 
-    /* Dynamic categories from JSON */
+    /* Dynamic categories from JSON — counts reflect platform filter */
     ALL_CATEGORIES.forEach(cat => {
-        const count = allAudios.filter(a => (a.categories || []).includes(cat)).length;
+        const count = visibleAudios.filter(a => (a.categories || []).includes(cat)).length;
         if (count === 0) return;
 
         const style = getCatStyle(cat);
