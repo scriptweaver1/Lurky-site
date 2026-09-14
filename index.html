@@ -848,6 +848,15 @@
 
             <div class="sidebar-divider"></div>
 
+            <p class="sidebar-label">Platforms</p>
+            <div class="sidebar-actions">
+                <button class="sidebar-action-btn active" id="toggleReddit" onclick="togglePlatform('reddit')">🟠 Reddit</button>
+                <button class="sidebar-action-btn active" id="togglePatreon" onclick="togglePlatform('patreon')">🔴 Patreon</button>
+                <button class="sidebar-action-btn active" id="toggleSubstar" onclick="togglePlatform('subscribestar')">🔵 SubscribeStar</button>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
             <div class="sidebar-actions">
                 <button class="sidebar-action-btn" id="favToggle" onclick="toggleFavourites()">♥ Favourites</button>
                 <button class="sidebar-action-btn" onclick="surpriseMe()">🎲 Surprise Me!</button>
@@ -1311,6 +1320,41 @@ function toggleFavourites() {
     document.getElementById('favToggle').classList.toggle('active', showFavsOnly);
     applyFilters();
 }
+
+/* ═══════════════════════════════════════════════════════
+   PLATFORM FILTERS
+═══════════════════════════════════════════════════════ */
+let hiddenPlatforms = new Set();
+
+function togglePlatform(platform) {
+    if (hiddenPlatforms.has(platform)) {
+        hiddenPlatforms.delete(platform);
+    } else {
+        hiddenPlatforms.add(platform);
+    }
+    const btnId = platform === 'subscribestar' ? 'toggleSubstar' : 
+                  platform === 'patreon' ? 'togglePatreon' : 'toggleReddit';
+    document.getElementById(btnId).classList.toggle('active', !hiddenPlatforms.has(platform));
+    applyFilters();
+}
+
+/**
+ * Check if an audio should be hidden based on platform filters.
+ * An audio is hidden ONLY if it exists exclusively on hidden platforms.
+ * Multi-platform entries stay visible if ANY of their platforms is visible.
+ */
+function isHiddenByPlatform(audio) {
+    if (hiddenPlatforms.size === 0) return false;
+    const links = audio.links || {};
+    const platforms = [];
+    if (links.reddit) platforms.push('reddit');
+    if (links.patreon) platforms.push('patreon');
+    if (links.subscribestar) platforms.push('subscribestar');
+    /* If no platform links, use the platform field */
+    if (platforms.length === 0) platforms.push(audio.platform);
+    /* Hidden only if ALL platforms are hidden */
+    return platforms.every(p => hiddenPlatforms.has(p));
+}
 function surpriseMe() {
     if (!filtered.length) return;
     const a = filtered[Math.floor(Math.random() * filtered.length)];
@@ -1591,6 +1635,11 @@ function applyFilters() {
     /* Category filter — checks if audio has the selected category */
     if (currentFilter !== 'all') {
         items = items.filter(a => audioHasCategory(a, currentFilter));
+    }
+
+    /* Platform filter — hide single-platform entries on hidden platforms */
+    if (hiddenPlatforms.size > 0) {
+        items = items.filter(a => !isHiddenByPlatform(a));
     }
 
     /* Smart Search — exact + normalized + related */
