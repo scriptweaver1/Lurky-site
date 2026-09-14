@@ -832,17 +832,6 @@
     <div class="app-layout">
         <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
-            <p class="sidebar-label">Audience</p>
-            <div class="sidebar-sort audience-filters" id="audienceFilters">
-                <button class="sort-pill audience-pill active" data-audience="4M" onclick="toggleAudience('4M')">♂ 4M</button>
-                <button class="sort-pill audience-pill active" data-audience="4F" onclick="toggleAudience('4F')">♀ 4F</button>
-                <button class="sort-pill audience-pill active" data-audience="4A" onclick="toggleAudience('4A')">◎ 4A</button>
-                <button class="sort-pill audience-pill active" data-audience="4TM" onclick="toggleAudience('4TM')">⚧ 4TM</button>
-                <button class="sort-pill audience-pill active" data-audience="4TF" onclick="toggleAudience('4TF')">⚧ 4TF</button>
-            </div>
-
-            <div class="sidebar-divider"></div>
-
             <p class="sidebar-label">Filter by Type</p>
             <ul class="filter-list" id="filterList">
                 <!-- Populated by JS -->
@@ -1375,56 +1364,6 @@ function surpriseMe() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   AUDIENCE FILTERS
-═══════════════════════════════════════════════════════ */
-let activeAudiences = new Set(['4M', '4F', '4A', '4TM', '4TF']);
-
-/**
- * Extract audience targets from an audio's tags.
- * Looks for patterns like F4M, FF4M, M4F, F4A, F4TF, F4TM etc.
- * Returns set of listener targets: '4M', '4F', '4A', '4TM', '4TF'
- */
-function getAudioAudiences(audio) {
-    const audiences = new Set();
-    const tags = audio.tags || [];
-    const title = audio.title || '';
-    const haystack = [title, ...tags].join(' ');
-    
-    const matches = haystack.match(/\b[FM]+4(?:TF|TM|[FMAB])\b/gi) || [];
-    for (const m of matches) {
-        const listener = m.toUpperCase().match(/4(.+)/)[1];
-        audiences.add('4' + listener);
-    }
-    
-    return audiences;
-}
-
-function toggleAudience(aud) {
-    if (activeAudiences.has(aud)) {
-        activeAudiences.delete(aud);
-    } else {
-        activeAudiences.add(aud);
-    }
-    document.querySelectorAll('.audience-pill').forEach(btn => {
-        btn.classList.toggle('active', activeAudiences.has(btn.dataset.audience));
-    });
-    buildFilters();
-    applyFilters();
-}
-
-function isHiddenByAudience(audio) {
-    if (activeAudiences.size === 0) return false;
-    const audioAud = getAudioAudiences(audio);
-    /* Show if audio matches ANY active audience filter */
-    for (const aud of activeAudiences) {
-        if (audioAud.has(aud)) return false;
-    }
-    /* If audio has no audience tags at all, show it anyway */
-    if (audioAud.size === 0) return false;
-    return true;
-}
-
-/* ═══════════════════════════════════════════════════════
    SCROLL TO TOP
 ═══════════════════════════════════════════════════════ */
 window.addEventListener('scroll', () => {
@@ -1438,13 +1377,10 @@ function buildFilters() {
     const list = document.getElementById('filterList');
     list.innerHTML = '';
 
-    /* Get visible audios (respecting platform + audience filters) */
-    let visibleAudios = hiddenPlatforms.size > 0
+    /* Get visible audios (respecting platform filter) */
+    const visibleAudios = hiddenPlatforms.size > 0
         ? allAudios.filter(a => !isHiddenByPlatform(a))
-        : [...allAudios];
-    if (activeAudiences.size > 0) {
-        visibleAudios = visibleAudios.filter(a => !isHiddenByAudience(a));
-    }
+        : allAudios;
 
     /* "All" always first */
     const allLi = document.createElement('li');
@@ -1710,11 +1646,6 @@ function applyFilters() {
     /* Platform filter — hide single-platform entries on hidden platforms */
     if (hiddenPlatforms.size > 0) {
         items = items.filter(a => !isHiddenByPlatform(a));
-    }
-
-    /* Audience filter */
-    if (activeAudiences.size > 0) {
-        items = items.filter(a => !isHiddenByAudience(a));
     }
 
     /* Smart Search — exact + normalized + related */
