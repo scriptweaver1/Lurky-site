@@ -850,7 +850,7 @@
 
             <p class="sidebar-label">Platforms</p>
             <div class="sidebar-actions">
-                <button class="sidebar-action-btn active" id="toggleReddit" onclick="togglePlatform('reddit')">🟠 Reddit</button>
+                <button class="sidebar-action-btn" id="toggleReddit" onclick="togglePlatform('reddit')">🟠 Reddit</button>
                 <button class="sidebar-action-btn active" id="togglePatreon" onclick="togglePlatform('patreon')">🔴 Patreon</button>
                 <button class="sidebar-action-btn active" id="toggleSubstar" onclick="togglePlatform('subscribestar')">🔵 SubscribeStar</button>
             </div>
@@ -1324,7 +1324,7 @@ function toggleFavourites() {
 /* ═══════════════════════════════════════════════════════
    PLATFORM FILTERS
 ═══════════════════════════════════════════════════════ */
-let hiddenPlatforms = new Set();
+let hiddenPlatforms = new Set(['reddit']);
 
 function togglePlatform(platform) {
     if (hiddenPlatforms.has(platform)) {
