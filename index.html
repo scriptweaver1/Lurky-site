@@ -316,6 +316,7 @@
     .filter-item:hover { background: rgba(160,0,200,0.06); color: var(--cream); }
     .filter-item.active { background: rgba(160,0,200,0.08); color: var(--warm-gold); }
     .filter-item .emoji { margin-right: 0.5rem; font-size: 0.9rem; }
+    .cat-emoji-img { width: 1em; height: 1em; object-fit: contain; vertical-align: -0.1em; display: inline-block; }
     .filter-count {
         font-size: 0.7rem; background: rgba(160,0,200,0.06);
         padding: 0.15rem 0.5rem; border-radius: 10px; color: var(--dark-gold);
@@ -926,25 +927,144 @@ const DATA_URL = './audios.json';
    Known categories get themed colors; new ones auto-generate.
 */
 const CATEGORY_STYLE = {
-    'ASMR':         { emoji:'🌙', color:'#b4a0d4' },
-    'Beast':        { emoji:'🐾', color:'#8b6b4a' },
-    'Collab':       { emoji:'🎙️', color:'#8bc4c4' },
-    'Comedy':       { emoji:'😂', color:'#e8c96a' },
-    'Cucking':      { emoji:'💔', color:'#e07a5f' },
-    'Dark ASMR':    { emoji:'🖤', color:'#8866aa' },
-    'Day-to-Day':   { emoji:'☕', color:'#c4a08b' },
-    'Fantasy':      { emoji:'🧛', color:'#aa66ff' },
-    'Fdom':         { emoji:'👑', color:'#d4a04a' },
-    'Fsub':         { emoji:'🔗', color:'#a88bd4' },
-    'Incest':       { emoji:'🚫', color:'#cc6688' },
-    'Interview':    { emoji:'🎧', color:'#7bc48a' },
-    'Mommy':        { emoji:'🌸', color:'#d4a0b4' },
-    'SFW':          { emoji:'☀️', color:'#c4c48b' },
-    'Sadism':       { emoji:'💥', color:'#ff4466' },
-    'Sci-fi':       { emoji:'🚀', color:'#6ab4e8' },
-    'Script Offer': { emoji:'📝', color:'#88aacc' },
-    'Taboo':        { emoji:'⛓️', color:'#cc4455' },
-    'Yandere':      { emoji:'🔪', color:'#ff66aa' },
+    /* ── Existing (kept or updated) ── */
+    'ASMR':             { emoji:'🌙',  color:'#b4a0d4' },
+    'Beast':            { emoji:'🐾',  color:'#8b6b4a' },
+    'Collab':           { emoji:'🎙️',  color:'#8bc4c4' },
+    'Comedy':           { emoji:'😂',  color:'#e8c96a' },
+    'Comedy/Humor':     { emoji:'😂',  color:'#e8c96a' },
+    'Cucking':          { emoji:'💔',  color:'#e07a5f' },
+    'Cucking/Cheating': { emoji:'💔',  color:'#e07a5f' },
+    'Dark ASMR':        { emoji:'🖤',  color:'#8866aa' },
+    'Day-to-Day':       { emoji:'☕',  color:'#c4a08b' },
+    'Fantasy':          { emoji:'🧛',  color:'#aa66ff' },
+    'Fdom':             { emoji:'👠',  color:'#d4a04a' },
+    'Femdom':           { emoji:'👠',  color:'#d4a04a' },
+    'Fsub':             { emoji:'🔗',  color:'#a88bd4' },
+    'Incest':           { emoji:'🚫',  color:'#cc6688' },
+    'Interview':        { emoji:'🎧',  color:'#7bc48a' },
+    'Mommy':            { emoji:'🌸',  color:'#d4a0b4' },
+    'SFW':              { emoji:'☀️',  color:'#c4c48b' },
+    'Sadism':           { emoji:'💥',  color:'#ff4466' },
+    'Sci-fi':           { emoji:'🚀',  color:'#6ab4e8' },
+    'Script Offer':     { emoji:'📝',  color:'#88aacc' },
+    'Taboo':            { emoji:'⛓️',  color:'#cc4455' },
+    'Yandere':          { emoji:'🔪',  color:'#ff66aa' },
+
+    /* ── Kink/Act — standard emojis ── */
+    'Casual Sex':       { emoji:'☕',  color:'#d4a48b' },
+    'Chastity/CBT':     { emoji:'🔒',  color:'#8899aa' },
+    'Degradation':      { emoji:'😳',  color:'#cc7788' },
+    'Doggy Style':      { emoji:'🦴',  color:'#c4a070' },
+    'Double Penetration':{ emoji:'‼️', color:'#dd5577' },
+    'Edging':           { emoji:'🐌',  color:'#99bb88' },
+    'Humiliation':      { emoji:'😢',  color:'#bb7799' },
+    'JOI':              { emoji:'🎙️',  color:'#cc88aa' },
+    'Masturbation':     { emoji:'✊',  color:'#cc99aa' },
+    'Pegging':          { emoji:'🔌',  color:'#9988cc' },
+    'Rimming':          { emoji:'🍩',  color:'#cc9966' },
+    'Rough Fuck':       { emoji:'🌶️', color:'#ee5544' },
+
+    /* ── Kink/Act — custom images ── */
+    'Breeding':         { img:'emojis/pregnancy-test.png', color:'#dd88aa' },
+    'Cowgirl/Reverse Cowgirl': { img:'emojis/cowgirl.png', color:'#cc8866' },
+    'Creampie':         { img:'emojis/creampie.png',       color:'#ddaa88' },
+    'Deepthroat':       { img:'emojis/deepthroat.png',     color:'#bb7799' },
+    'Free Use':         { img:'emojis/freeuse.png',        color:'#aa88cc' },
+    'Handjob':          { img:'emojis/handjob.png',        color:'#cc9988' },
+    'Mindbreak':        { img:'emojis/mindbreak.png',      color:'#bb66dd' },
+    'Orgy':             { img:'emojis/orgy.png',           color:'#dd6688' },
+    'Titty Fuck':       { img:'emojis/tittyfuck.png',      color:'#dd99aa' },
+
+    /* ── Body/identity — standard emojis ── */
+    'Big Boobs':        { emoji:'🍈',  color:'#88cc88' },
+    'Big Cock':         { emoji:'🍆',  color:'#8866bb' },
+    'Small Cock':       { emoji:'🤏',  color:'#aa88bb' },
+    'Size Difference':  { emoji:'📏',  color:'#99aacc' },
+
+    /* ── Body/identity — custom images ── */
+    'Bisexual':         { img:'emojis/bi-flag.png',    color:'#9966cc' },
+    'Bi-encouragement and forced bi': { img:'emojis/bi-flag.png', color:'#9966cc' },
+    'Girlcock':         { img:'emojis/girlcock.png',   color:'#dd88cc' },
+
+    /* ── Persona/archetype — standard emojis ── */
+    'Bully':            { emoji:'💢',  color:'#dd6644' },
+    'GFE':              { emoji:'❤️',  color:'#ee6688' },
+    'GILF':             { emoji:'👵',  color:'#bbaa88' },
+    'GILF/Granny':      { emoji:'👵',  color:'#bbaa88' },
+    'Good pet':         { emoji:'🏷️', color:'#aa99cc' },
+    'MILF':             { emoji:'👗',  color:'#cc6699' },
+    'Older Woman':      { emoji:'👗',  color:'#cc6699' },
+    'Queens and other royals': { emoji:'👑', color:'#ddaa44' },
+    'Royal':            { emoji:'👑',  color:'#ddaa44' },
+    'Switchy':          { emoji:'🔀',  color:'#88aadd' },
+
+    /* ── Tone/genre — standard emojis ── */
+    'Cinematic':        { emoji:'🎬',  color:'#aabb88' },
+    'Dark':             { emoji:'🖤',  color:'#8866aa' },
+    'EXTREME':          { emoji:'🚫',  color:'#ee3344' },
+    'Improvisation':    { emoji:'🎤',  color:'#88ccaa' },
+    'Narrative':        { emoji:'💬',  color:'#88aabb' },
+    'Narrative/Radio Play': { emoji:'🎭', color:'#99aabb' },
+    'Raw Recording':    { emoji:'🎞️', color:'#aa9988' },
+    'Series':           { emoji:'🍿',  color:'#ddbb66' },
+
+    /* ── Orgasm variants — standard emojis ── */
+    'Listener Orgasm':  { emoji:'🥜',  color:'#ccaa77' },
+    'Orgasm':           { emoji:'🥜',  color:'#ccaa77' },
+    'Orgasm for All':   { emoji:'🥜',  color:'#ccaa77' },
+    'Orgasm for Listener': { emoji:'🥜', color:'#ccaa77' },
+    'Speaker Orgasm':   { emoji:'💦',  color:'#77aadd' },
+
+    /* ── Orgasm variants — custom images ── */
+    'Mutual Orgasm':    { img:'emojis/mutual-orgasm.png',    color:'#ddaa88' },
+    'Orgasm Control':   { img:'emojis/orgasm_control.png',   color:'#cc8899' },
+    'Orgasm Denial':    { img:'emojis/orgasm_denial.png',    color:'#aa7799' },
+    'Orgasm Mutual':    { img:'emojis/mutual-orgasm.png',    color:'#ddaa88' },
+
+    /* ── Audience/format — standard emojis ── */
+    'F4F':              { emoji:'♀️',  color:'#dd77aa' },
+    'F4F Fsub listener':{ emoji:'♀️',  color:'#dd77aa' },
+    'F4TF':             { emoji:'⚧️', color:'#77bbdd' },
+    'Long (>40min)':    { emoji:'⏳',  color:'#bbaa77' },
+    'Short (<15min)':   { emoji:'⚡',  color:'#ddcc55' },
+
+    /* ── Audience/format — custom images ── */
+    'No Genital Mentions': { img:'emojis/genderless.png',    color:'#99aabb' },
+    'No Orgasms':       { img:'emojis/orgasm_denial.png',    color:'#aa7799' },
+    'No Size Mentions': { img:'emojis/nosize.png',           color:'#99aabb' },
+
+    /* ── Other — standard emojis ── */
+    'Rape':             { emoji:'🍇',  color:'#8866aa' },
+    'Scent':            { emoji:'☁️',  color:'#aabbcc' },
+    'Succubus/Vampire': { emoji:'😈',  color:'#bb55cc' },
+    'Virgin Listener':  { emoji:'🍒',  color:'#dd6666' },
+
+    /* ── Other — custom images ── */
+    'Noncon Msub':      { img:'emojis/malegrape.png',   color:'#886699' },
+    'Virgin':           { img:'emojis/cherrypop.png',   color:'#dd6677' },
+
+    /* ── Updated emojis (changed from earlier) ── */
+    'Massage':          { emoji:'🖐️', color:'#bbaa99' },
+    'Cuddling':         { emoji:'😚',  color:'#ddaacc' },
+    'Hypno':            { emoji:'😵‍💫', color:'#aa88dd' },
+    'Foot Fetish':      { emoji:'🦶',  color:'#ccaa88' },
+    'Mind Control':     { emoji:'🧠',  color:'#dd88aa' },
+    'Robot':            { emoji:'🤖',  color:'#88bbcc' },
+    'Sleep Aid':        { emoji:'😴',  color:'#8899bb' },
+    'Succubus':         { emoji:'😈',  color:'#bb55cc' },
+    'Wholesome':        { emoji:'💖',  color:'#ee88aa' },
+    'Anal':             { emoji:'🍑',  color:'#ee9977' },
+    'Threesome':        { emoji:'👯',  color:'#cc88aa' },
+    'Monstergirl':      { emoji:'👹',  color:'#bb6644' },
+    'Voyeur':           { emoji:'👀',  color:'#aabb99' },
+
+    /* ── Updated to custom images ── */
+    'Watersports':      { img:'emojis/watersports.png',  color:'#77aacc' },
+    'Vampire':          { img:'emojis/Vamp.png',         color:'#cc3344' },
+    'Cunnilingus':      { img:'emojis/tongue.png',       color:'#dd7788' },
+    'Blowjob':          { img:'emojis/blowjob.png',      color:'#dd8899' },
+    'Seduction':        { img:'emojis/seduction.png',     color:'#cc6699' },
 };
 const DEFAULT_CAT_STYLE = { emoji:'🎵', color:'#ff00ff' };
 
@@ -959,6 +1079,12 @@ function hashColor(str) {
 function getCatStyle(name) {
     if (CATEGORY_STYLE[name]) return CATEGORY_STYLE[name];
     return { emoji: DEFAULT_CAT_STYLE.emoji, color: hashColor(name) };
+}
+
+/* Render emoji as text or <img> depending on whether it's a custom image */
+function renderEmoji(style) {
+    if (style.img) return `<img src="${style.img}" alt="" class="cat-emoji-img">`;
+    return style.emoji || DEFAULT_CAT_STYLE.emoji;
 }
 
 function getCatBg(color) { return color.startsWith('hsl') ? color.replace('65%)', '10%)') : color + '1a'; }
@@ -1405,7 +1531,7 @@ function buildFilters() {
         const li = document.createElement('li');
         li.className = 'filter-item' + (currentFilter === cat ? ' active' : '');
         li.dataset.type = cat;
-        li.innerHTML = `<span><span class="emoji">${style.emoji}</span>${cat}</span><span class="filter-count">${count}</span>`;
+        li.innerHTML = `<span><span class="emoji">${renderEmoji(style)}</span>${cat}</span><span class="filter-count">${count}</span>`;
         li.addEventListener('click', () => {
             currentFilter = cat;
             document.querySelectorAll('.filter-item').forEach(i => i.classList.toggle('active', i.dataset.type === cat));
@@ -1587,11 +1713,11 @@ function createCard(audio, idx) {
             const s = getCatStyle(cat);
             const bg = getCatBg(s.color);
             const bd = getCatBd(s.color);
-            badgesHTML += `<span class="card-type card-type-clickable" style="background:${bg};border:1px solid ${bd};color:${s.color}" onclick="event.stopPropagation();filterByCategory('${esc(cat)}')">${s.emoji} ${cat}</span>`;
+            badgesHTML += `<span class="card-type card-type-clickable" style="background:${bg};border:1px solid ${bd};color:${s.color}" onclick="event.stopPropagation();filterByCategory('${esc(cat)}')">${renderEmoji(s)} ${cat}</span>`;
         });
     } else {
         const s = DEFAULT_CAT_STYLE;
-        badgesHTML = `<span class="card-type" style="background:rgba(160,0,200,0.06);border:1px solid rgba(160,0,200,0.13);color:${s.color}">${s.emoji} Uncategorized</span>`;
+        badgesHTML = `<span class="card-type" style="background:rgba(160,0,200,0.06);border:1px solid rgba(160,0,200,0.13);color:${s.color}">${renderEmoji(s)} Uncategorized</span>`;
     }
 
     const meta = [];
